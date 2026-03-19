@@ -1,12 +1,14 @@
 "use client";
 
+import { useEditNews } from "@/hooks/provider-news-editor";
 import { ImagePlus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 export const FileInput = () => {
   const inputRef = useRef(null);
   const [previewUrl, setPreviewUrl] = useState("");
-  const [fileName, setFileName] = useState("");
+  const { setThumbnailImage } = useEditNews()
+  
 
   useEffect(() => {
     return () => {
@@ -22,6 +24,7 @@ export const FileInput = () => {
 
   const handleChange = (event) => {
     const file = event.target.files?.[0];
+    setThumbnailImage(file);
 
     if (!file) {
       return;
@@ -31,7 +34,6 @@ export const FileInput = () => {
       URL.revokeObjectURL(previewUrl);
     }
 
-    setFileName(file.name);
     setPreviewUrl(URL.createObjectURL(file));
   };
 
@@ -53,7 +55,7 @@ export const FileInput = () => {
           {previewUrl ? (
             <img
               src={previewUrl}
-              alt={fileName || "Selected upload preview"}
+              alt={"file" || "Selected upload preview"}
               className="h-full w-full object-cover"
             />
           ) : (
