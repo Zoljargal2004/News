@@ -49,7 +49,7 @@ export const Header = () => {
               <Search size={18} className="text-black/55" />
               <input
                 type="text"
-                placeholder="Search stories"
+                placeholder="Хайх"
                 className="w-full bg-transparent text-sm placeholder:text-black/45 focus:outline-none"
               />
             </label>
@@ -81,7 +81,7 @@ export const Header = () => {
             onClick={() => setOpen((value) => !value)}
             className="rounded-full border border-black/10 bg-black px-4 py-2 text-sm font-semibold text-white transition hover:bg-black/85"
           >
-            {open ? "Show less" : "More sections"}
+            {open ? "Хураах" : "Дэлгэх"}
           </button>
         </nav>
       </div>

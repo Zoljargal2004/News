@@ -1,5 +1,6 @@
 "use client";
 
+import { ImagePlus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 export const FileInput = () => {
@@ -35,7 +36,7 @@ export const FileInput = () => {
   };
 
   return (
-    <>
+    <div className="mt-8">
       <input
         ref={inputRef}
         type="file"
@@ -46,9 +47,9 @@ export const FileInput = () => {
       <button
         type="button"
         onClick={openPicker}
-        className="group flex w-full overflow-hidden rounded-[26px] border border-black/10 bg-white text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+        className="group  bg-secondary-background flex w-full overflow-hidden rounded-[26px] border border-black/10 bg-white text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
       >
-        <div className="flex h-[320px] w-full items-center justify-center bg-[linear-gradient(135deg,#f8f8f8_0%,#e9e9e9_100%)]">
+        <div className="flex h-[470] w-full items-center justify-center bg-[linear-gradient(135deg,#f8f8f8_0%,#e9e9e9_100%)]">
           {previewUrl ? (
             <img
               src={previewUrl}
@@ -56,21 +57,11 @@ export const FileInput = () => {
               className="h-full w-full object-cover"
             />
           ) : (
-            <div className="flex flex-col items-center gap-3 px-6 text-center text-black/55">
-              <div className="rounded-full bg-black px-4 py-2 text-sm font-semibold text-white">
-                Choose image
-              </div>
-              <p className="text-sm">Click to upload and preview your image</p>
-              <p className="text-xs uppercase tracking-[0.24em] text-black/35">
-                PNG, JPG, WEBP
-              </p>
-            </div>
+            <ImagePlus size={94} />
           )}
         </div>
       </button>
-      {fileName ? (
-        <p className="mt-3 text-sm text-black/55">{fileName}</p>
-      ) : null}
-    </>
+      
+    </div>
   );
 };

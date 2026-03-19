@@ -1,3 +1,5 @@
+"use client"
+
 import { FileInput } from "@/components/news/create/file-input";
 
 export default function CreateNewsPage() {
