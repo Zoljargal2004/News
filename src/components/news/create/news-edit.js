@@ -102,7 +102,7 @@ const NewsImageInput = ({ image, onChange }) => {
         onClick={openPicker}
         className="group flex w-full overflow-hidden rounded-[26px] border border-black/10 bg-white text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
       >
-        <div className="flex h-[470px] w-full items-center justify-center bg-[linear-gradient(135deg,#f8f8f8_0%,#e9e9e9_100%)]">
+        <div className="flex h-[470] w-full items-center justify-center bg-[linear-gradient(135deg,#f8f8f8_0%,#e9e9e9_100%)]">
           {image?.src ? (
             <img
               src={image.src}
@@ -111,7 +111,7 @@ const NewsImageInput = ({ image, onChange }) => {
             />
           ) : (
             <div className="flex flex-col items-center gap-4 text-black/45">
-              <div className="rounded-full bg-[var(--secondary-background)] p-6">
+              <div className="rounded-full bg-(--secondary-background) p-6">
                 <ImagePlus size={72} />
               </div>
               <div className="text-center">
