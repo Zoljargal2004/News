@@ -35,11 +35,25 @@ export async function POST(request: NextRequest) {
 
     const data = await res.json();
 
+    if (!res.ok) {
+      return NextResponse.json(
+        {
+          success: false,
+          error:
+            data?.message || data?.error?.message || "Image upload failed",
+        },
+        { status: res.status },
+      );
+    }
+
     return NextResponse.json({ success: true, data });
   } catch (e) {
     console.error(e);
     return NextResponse.json(
-      { success: false, error: "Upload failed" },
+      {
+        success: false,
+        error: e instanceof Error ? e.message : "Image upload failed",
+      },
       { status: 500 }
     );
   }

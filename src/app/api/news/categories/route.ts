@@ -4,8 +4,9 @@ import { NextResponse } from "next/server";
 export async function GET() {
   try {
     const categoryRows = await sql`
-          SELECT id FROM categories
-        `;
+      SELECT name FROM categories
+      ORDER BY name ASC
+    `;
     return NextResponse.json(
       { success: true, data: categoryRows },
       { status: 200 },

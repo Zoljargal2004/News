@@ -1,16 +1,69 @@
-import { APIHandler } from "@/lib/api-handler";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { APIHandler } from "@/lib/api-handler";
 
 export const useNews = () => {
   const [loading, setLoading] = useState(false);
-  const uploadNews = async (news) => {
-    setLoading(true);
-    const res = await APIHandler("/api/news/create", "POST", news);
-    if (res.seccess) {
-      toast("Амжилттай мэдээ нийтэллээ");
+
+  const uploadImage = async (file) => {
+    if (!file) {
+      return null;
     }
-    setLoading(false);
+
+    const form = new FormData();
+    form.append("file", file);
+    form.append("fileName", file.name);
+
+    const res = await APIHandler("/api/general/image", "POST", form);
+
+    if (!res?.success) {
+      throw new Error(res?.error || "Image upload failed");
+    }
+
+    return res.data?.url || res.data?.data?.url || null;
+  };
+
+  const uploadNews = async (payload) => {
+    try {
+      setLoading(true);
+
+      const thumbnail = await uploadImage(payload.thumbnailImage);
+      const news = await Promise.all(
+        payload.news.map(async (item) => {
+          if (item?.type !== "image") {
+            return item;
+          }
+
+          const uploadedImage = await uploadImage(item.file);
+
+          return {
+            type: "image",
+            src: uploadedImage || item.src || "",
+          };
+        }),
+      );
+
+      const res = await APIHandler("/api/news", "POST", {
+        news,
+        status: payload.status,
+        categories: payload.categories,
+        recommended: payload.recommended,
+        title: payload.title,
+        thumbnail,
+      });
+
+      if (!res?.success) {
+        throw new Error(res?.error || "Failed to create news");
+      }
+
+      toast("News created successfully");
+      return res;
+    } catch (error) {
+      toast(error.message || "Failed to create news");
+      return { success: false, error: error.message };
+    } finally {
+      setLoading(false);
+    }
   };
 
   return { uploadNews, loading };
@@ -19,15 +72,25 @@ export const useNews = () => {
 export const useCategories = () => {
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState([]);
+
   useEffect(() => {
     const getCategories = async () => {
-      setLoading(false);
-      const res = APIHandler("/api/news/categories", "GET");
-      if (res.success) {
-        setCategories(res.data);
-      }
       setLoading(true);
+      const res = await APIHandler("/api/news/categories", "GET");
+
+      if (res?.success) {
+        setCategories(
+          Array.isArray(res.data)
+            ? res.data
+                .map((item) => (typeof item === "string" ? item : item?.name))
+                .filter(Boolean)
+            : [],
+        );
+      }
+
+      setLoading(false);
     };
+
     getCategories();
   }, []);
 

@@ -1,11 +1,15 @@
-"use client"
+"use client";
 
+import { Components } from "@/components/news/create/component-panel";
 import { FileInput } from "@/components/news/create/file-input";
 import { NewsEdit } from "@/components/news/create/news-edit";
 
 export default function CreateNewsPage() {
-    return <div className="flex flex-col align-center w-full max-w-[870] mx-auto">
-        <FileInput/>
-        <NewsEdit/>
+  return (
+    <div className="mx-auto flex w-full max-w-[870] flex-col pb-10">
+      <FileInput />
+      <NewsEdit />
+      <Components/>
     </div>
+  );
 }

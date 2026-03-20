@@ -1,42 +1,46 @@
 import { sql } from "@/lib/db";
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 
 export async function POST(request) {
   try {
     const {
       news,
       status,
-      categories, // 👈 array
+      categories,
       recommended,
       title,
       thumbnail,
     } = await request.json();
+    const safeCategories = Array.isArray(categories) ? categories : [];
+    const safeNews = Array.isArray(news) ? news : [];
 
-    // 1. Insert news
+    if (!title?.trim()) {
+      return NextResponse.json(
+        { success: false, error: "Title is required" },
+        { status: 400 },
+      );
+    }
+
     const newsRes = await sql`
       INSERT INTO news (news, status, recommended, title, thumbnail)
-      VALUES (${news}, ${status}, ${recommended}, ${title}, ${thumbnail})
+      VALUES (${JSON.stringify(safeNews)}, ${status}, ${recommended}, ${title.trim()}, ${thumbnail})
       RETURNING id
     `;
 
     const newsId = newsRes[0].id;
 
-    // 2. Insert categories if not exist
-    for (const name of categories) {
-      await sql`
-        INSERT INTO categories (name)
-        VALUES (${name})
-        ON CONFLICT (name) DO NOTHING
-      `;
-    }
-
-    // 3. Get category IDs
     const categoryRows = await sql`
       SELECT id FROM categories
-      WHERE name = ANY(${categories})
+      WHERE name = ANY(${safeCategories})
     `;
 
-    // 4. Insert into junction table
+    if (safeCategories.length > 0 && categoryRows.length !== safeCategories.length) {
+      return NextResponse.json(
+        { success: false, error: "One or more selected categories do not exist" },
+        { status: 400 },
+      );
+    }
+
     for (const cat of categoryRows) {
       await sql`
         INSERT INTO news_categories (news_id, category_id)
@@ -48,7 +52,10 @@ export async function POST(request) {
   } catch (e) {
     console.error(e);
     return NextResponse.json(
-      { success: false, error: "Upload failed" },
+      {
+        success: false,
+        error: e instanceof Error ? e.message : "Failed to create news",
+      },
       { status: 500 }
     );
   }

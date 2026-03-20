@@ -74,7 +74,15 @@
 
   --sidebar-ring: oklch(0.708 0 0);
 
-  --additional-accent: #8aff53
+  --additional-accent: #8aff53;
+
+  --second-button: #FFCF53;
+
+  --third-button: #FF5353;
+
+  --font-sans: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+
+  --font-geist-mono: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
 }
 
 @media (prefers-color-scheme: dark) {
