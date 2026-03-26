@@ -1,3 +1,5 @@
 export const TredingNews = () => {
-    return <div></div>
+    return <div>
+
+    </div>
 }

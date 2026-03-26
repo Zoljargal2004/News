@@ -2,6 +2,45 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { APIHandler } from "@/lib/api-handler";
 
+const buildNewsQuery = (filters = {}) => {
+  const searchParams = new URLSearchParams();
+
+  if (filters.publishDate) {
+    searchParams.set("publish-date", filters.publishDate);
+  }
+
+  if (Array.isArray(filters.categoryIds) && filters.categoryIds.length > 0) {
+    searchParams.set("category", filters.categoryIds.join(","));
+  }
+
+  const query = searchParams.toString();
+
+  return query ? `/api/news?${query}` : "/api/news";
+};
+
+export const useGetNews = (filters = {}) => {
+  const [news, setNews] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const getNews = async () => {
+      setLoading(true);
+
+      const res = await APIHandler(buildNewsQuery(filters), "GET");
+
+      if (res?.data) {
+        setNews(res.data);
+      }
+
+      setLoading(false);
+    };
+
+    getNews();
+  }, [filters.publishDate, JSON.stringify(filters.categoryIds || [])]);
+
+  return { news, loading };
+};
+
 export const useNews = () => {
   const [loading, setLoading] = useState(false);
 
