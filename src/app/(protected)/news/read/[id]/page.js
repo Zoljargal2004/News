@@ -1,64 +1,71 @@
-"use client";
+import { headers } from "next/headers";
+import { notFound } from "next/navigation";
 
-import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
-import { useGetOneNews } from "@/hooks/use-news";
+const getBaseUrl = async () => {
+  const headerStore = await headers();
+  const host =
+    headerStore.get("x-forwarded-host") || headerStore.get("host") || "";
+  const protocol =
+    headerStore.get("x-forwarded-proto") || (host.includes("localhost") ? "http" : "https");
 
-export default function Page() {
-  const { id } = useParams();
+  return `${protocol}://${host}`;
+};
 
-  const { getNews, loading, error } = useGetOneNews();
+const getNewsById = async (id) => {
+  const baseUrl = await getBaseUrl();
+  const res = await fetch(`${baseUrl}/api/news/read/${id}`, {
+    cache: "no-store",
+  });
 
-  const [news, setNews] = useState(null);
+  if (res.status === 404) {
+    notFound();
+  }
 
-  useEffect(() => {
-    const fetchData = async () => {
-      if (id) {
-        const data = await getNews(id);
-        setNews(data);
-      }
-    };
+  const payload = await res.json();
 
-    fetchData();
-  }, [id]);
+  if (!res.ok || !payload?.success) {
+    throw new Error(payload?.error || "Failed to fetch news");
+  }
 
-  if (loading) return <p>Loading...</p>;
+  return payload.data;
+};
 
-  console.log(news);
+export default async function Page({ params }) {
+  const { id } = await params;
+  const news = await getNewsById(id);
 
   return (
-    <div className="flex w-full flex-col items-center">
-      <div className="w-full h-[470] overflow-hidden rounded-3xl">
+    <div className="flex w-full flex-col items-center gap-8">
+      <div className="h-[470] w-full overflow-hidden rounded-3xl">
         <img
           src={news?.thumbnail}
-          alt="thumbnail"
-          className="w-full h-full object-cover"
+          alt={news?.title || "thumbnail"}
+          className="h-full w-full object-cover"
         />
       </div>
-      <span className="font-bold text-6xl">{news.title}</span>
-      <NewsBody body={news.news} />
+      <span className="text-center text-6xl font-bold">{news?.title}</span>
+      <NewsBody body={news?.news || []} />
     </div>
   );
 }
 
 const NewsBody = ({ body }) => {
   return (
-    <div className="w-full flex flex-col gap-4">
+    <div className="flex w-full flex-col gap-4">
       {body.map((ele, i) => {
         if (ele.type === "p") {
-          return (
-            <span
-              key={i}
-              dangerouslySetInnerHTML={{ __html: ele.value }}
-            />
-          );
-        } else if (ele.type === "image") {
+          return <span key={i} dangerouslySetInnerHTML={{ __html: ele.value }} />;
+        }
+
+        if (ele.type === "image") {
           return (
             <div key={i}>
-              <img src={ele.src} className="w-full rounded-xl" />
+              <img src={ele.src} alt="" className="w-full rounded-xl" />
             </div>
           );
         }
+
+        return null;
       })}
     </div>
   );

@@ -67,7 +67,7 @@ export const PanelSidebar = () => {
   };
 
   return (
-    <aside className="rounded-3xl border border-black/10 bg-(--sidebar) p-5 shadow-sm lg:sticky lg:top-24">
+    <aside className="rounded-3xl border border-black/10 bg-sidebar p-5 shadow-sm lg:sticky lg:top-24">
       <div className="flex flex-col gap-5">
         <TitleField title={title} setTitle={setTitle} />
         <RecommendedField
