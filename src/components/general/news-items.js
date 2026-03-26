@@ -1,10 +1,19 @@
-import { Bookmark, Save } from "lucide-react";
+"use client";
+
+import { Bookmark } from "lucide-react";
 import { Button } from "../ui/button";
+import { useRouter } from "next/navigation";
 
 export const News1 = ({ data }) => {
+  const router = useRouter();
   return (
     <div className="max-h-[440]">
-      <div className="rounded-2xl relative overflow-hidden w-full h-full">
+      <div
+        className="rounded-2xl relative overflow-hidden w-full h-full"
+        onClick={() => {
+          router.push(`/news/read/${data.id}`);
+        }}
+      >
         <img
           src={data?.thumbnail}
           alt="news thumbnail"
@@ -22,7 +31,7 @@ export const News1 = ({ data }) => {
   );
 };
 
-export const News2 = ({data}) => {
+export const News2 = ({ data }) => {
   return (
     <div className="max-h-[440]">
       <div className="rounded-2xl relative overflow-hidden w-full h-full">

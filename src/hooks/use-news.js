@@ -18,6 +18,32 @@ const buildNewsQuery = (filters = {}) => {
   return query ? `/api/news?${query}` : "/api/news";
 };
 
+export const useGetOneNews = () => {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const getNews = async (id) => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const res = await APIHandler(`/api/news/read/${id}`, "GET");
+
+      if (!res.success) {
+        throw new Error("Failed to fetch news");
+      } else {
+        return res.data;
+      }
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return { loading, error, getNews };
+};
+
 export const useGetNews = (filters = {}) => {
   const [news, setNews] = useState([]);
   const [loading, setLoading] = useState(false);
