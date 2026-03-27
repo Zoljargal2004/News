@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useState } from "react";
 import { LogOut, Search } from "lucide-react";
 import { GreenBgTitle } from "../general/title";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 const nav = [
   { href: "/international", label: "Олон улсын" },
@@ -18,6 +20,31 @@ const nav = [
 
 export const Header = () => {
   const [open, setOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      setLoggingOut(true);
+
+      const res = await fetch("/api/auth/session", {
+        method: "DELETE",
+      });
+      const payload = await res.json();
+
+      if (!res.ok || !payload?.success) {
+        throw new Error(payload?.error || "Failed to sign out");
+      }
+
+      toast("Signed out");
+      router.push("/auth");
+      router.refresh();
+    } catch (error) {
+      toast(error.message || "Failed to sign out");
+    } finally {
+      setLoggingOut(false);
+    }
+  };
 
   return (
     <header className="border-b border-black/10 bg-white/90 backdrop-blur-sm">
@@ -56,6 +83,8 @@ export const Header = () => {
             <button
               type="button"
               aria-label="Log out"
+              onClick={handleLogout}
+              disabled={loggingOut}
               className="flex h-12 w-12 items-center justify-center rounded-full border border-black/10 bg-white text-foreground transition hover:bg-black hover:text-white"
             >
               <LogOut size={20} />
