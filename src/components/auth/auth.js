@@ -88,7 +88,7 @@ export const Auth = () => {
               submitAuth({
                 endpoint: "/api/auth/session",
                 body: values,
-                successMessage: "Successfully signed in",
+                successMessage: "Амжилттай нэвтэрлээ",
               })
             }
           />
@@ -99,7 +99,7 @@ export const Auth = () => {
               submitAuth({
                 endpoint: "/api/auth/user",
                 body: values,
-                successMessage: "Account created successfully",
+                successMessage: "Амжилттай бүртгүүллээ",
               })
             }
           />
