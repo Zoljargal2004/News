@@ -45,6 +45,7 @@ export const sanitizeUser = (user: any) => {
     id: user.id,
     name: user.name,
     email: user.email,
+    role: user.role,
   };
 };
 
@@ -85,7 +86,7 @@ export const getCurrentUser = async (sql: any) => {
 
     const tokenHash = createHash("sha256").update(token).digest("hex");
     const rows = await sql`
-      SELECT u.id, u.name, u.email
+      SELECT u.id, u.name, u.email, u.role
       FROM auth_sessions s
       JOIN users u ON u.id = s.user_id
       WHERE s.token_hash = ${tokenHash}
@@ -118,4 +119,8 @@ export const getSessionCookieOptions = (expiresAt?: Date) => ({
 
 export const isMissingAuthTableError = (error: any) => {
   return error?.code === "42P01";
+};
+
+export const isAdmin = (user: any) => {
+  return user?.role === "admin";
 };

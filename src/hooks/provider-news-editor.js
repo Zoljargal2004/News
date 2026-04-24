@@ -12,6 +12,7 @@ export function NewsProvider({ children }) {
   const [recommended, setRecommended] = useState(false);
   const [title, setTitle] = useState("");
   const [thumbnailImage, setThumbnailImage] = useState(null);
+  const [politicalParty, setPoliticalParty] = useState("");
 
   const resetEditor = () => {
     setNews([]);
@@ -21,6 +22,7 @@ export function NewsProvider({ children }) {
     setRecommended(false);
     setTitle("");
     setThumbnailImage(null);
+    setPoliticalParty("");
   };
 
   return (
@@ -33,6 +35,7 @@ export function NewsProvider({ children }) {
         recommended,
         title,
         thumbnailImage,
+        politicalParty,
         setNews,
         setThumbnail,
         setCategory: setCategories,
@@ -41,6 +44,7 @@ export function NewsProvider({ children }) {
         setRecommended,
         setTitle,
         setThumbnailImage,
+        setPoliticalParty,
         resetEditor,
       }}
     >

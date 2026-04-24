@@ -18,7 +18,7 @@ const nav = [
   { href: "/lifestyle", label: "Хөгжлийн" },
 ];
 
-export const Header = () => {
+export const Header = ({ user }) => {
   const [open, setOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const router = useRouter();
@@ -93,6 +93,15 @@ export const Header = () => {
         </div>
 
         <nav className="flex flex-wrap gap-2">
+          {user?.role === "admin" ? (
+            <Link
+              href="/news/create"
+              className="rounded-full border border-black/10 bg-white px-4 py-2 text-sm font-medium text-black/75 transition hover:-translate-y-px hover:border-black/20 hover:bg-(--accent) hover:text-black"
+            >
+              Write news
+            </Link>
+          ) : null}
+
           {nav
             .filter((item, index) => open || index < 4)
             .map((item) => (

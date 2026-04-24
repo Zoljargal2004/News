@@ -12,7 +12,7 @@ export default async function ProtectedLayout({ children }) {
 
   return (
     <div className="flex flex-col gap-8">
-      <Header />
+      <Header user={user} />
       {children}
     </div>
   );

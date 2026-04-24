@@ -31,10 +31,12 @@ export const PanelSidebar = () => {
     recommended,
     title,
     thumbnailImage,
+    politicalParty,
     setCategories,
     setStatus,
     setRecommended,
     setTitle,
+    setPoliticalParty,
     resetEditor,
   } = useEditNews();
 
@@ -59,6 +61,7 @@ export const PanelSidebar = () => {
       recommended,
       title: title.trim(),
       thumbnailImage,
+      politicalParty: politicalParty.trim(),
     });
 
     if (res?.success) {
@@ -73,6 +76,10 @@ export const PanelSidebar = () => {
         <RecommendedField
           recommended={recommended}
           setRecommended={setRecommended}
+        />
+        <PoliticalPartyField
+          politicalParty={politicalParty}
+          setPoliticalParty={setPoliticalParty}
         />
         <StatusField status={status} setStatus={setStatus} />
         <CategoriesField
@@ -111,6 +118,19 @@ const RecommendedField = ({ recommended, setRecommended }) => {
       <Checkbox
         checked={recommended}
         onCheckedChange={(checked) => setRecommended(Boolean(checked))}
+      />
+    </div>
+  );
+};
+
+const PoliticalPartyField = ({ politicalParty, setPoliticalParty }) => {
+  return (
+    <div className="space-y-2">
+      <p className="text-sm font-medium">Political party</p>
+      <Input
+        value={politicalParty}
+        onChange={(event) => setPoliticalParty(event.target.value)}
+        placeholder="Which party benefits from this news?"
       />
     </div>
   );

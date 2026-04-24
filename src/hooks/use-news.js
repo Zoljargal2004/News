@@ -115,6 +115,7 @@ export const useNews = () => {
         recommended: payload.recommended,
         title: payload.title,
         thumbnail,
+        politicalParty: payload.politicalParty,
       });
 
       if (!res?.success) {
@@ -160,4 +161,29 @@ export const useCategories = () => {
   }, []);
 
   return { categories, loading };
+};
+
+export const useCurrentUser = () => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const getUser = async () => {
+      setLoading(true);
+
+      const res = await APIHandler("/api/auth/user", "GET");
+
+      if (res?.success) {
+        setUser(res.data);
+      } else {
+        setUser(null);
+      }
+
+      setLoading(false);
+    };
+
+    getUser();
+  }, []);
+
+  return { user, loading };
 };

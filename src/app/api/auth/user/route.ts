@@ -72,9 +72,9 @@ export async function POST(request: NextRequest) {
 
     const hashedPassword = hashPassword(safePassword);
     const userRows = await sql`
-      INSERT INTO users (name, email, password)
-      VALUES (${safeName}, ${safeEmail}, ${hashedPassword})
-      RETURNING id, name, email
+      INSERT INTO users (name, email, password, role)
+      VALUES (${safeName}, ${safeEmail}, ${hashedPassword}, ${"reader"})
+      RETURNING id, name, email, role
     `;
 
     const user = sanitizeUser(userRows[0]);

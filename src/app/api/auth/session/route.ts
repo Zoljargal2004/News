@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     }
 
     const rows = await sql`
-      SELECT id, name, email, password
+      SELECT id, name, email, password, role
       FROM users
       WHERE email = ${safeEmail}
       LIMIT 1

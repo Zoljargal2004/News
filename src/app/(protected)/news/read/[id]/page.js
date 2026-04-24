@@ -1,5 +1,6 @@
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
+import { CommentsSection } from "@/components/news/read/comments-section";
 
 const getBaseUrl = async () => {
   const headerStore = await headers();
@@ -44,7 +45,12 @@ export default async function Page({ params }) {
         />
       </div>
       <span className="text-center text-6xl font-bold">{news?.title}</span>
+      {news?.political_party ? (
+        <p>Political party relevance: {news.political_party}</p>
+      ) : null}
+      {news?.author_name ? <p>Author: {news.author_name}</p> : null}
       <NewsBody body={news?.news || []} />
+      <CommentsSection newsId={news.id} />
     </div>
   );
 }

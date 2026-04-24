@@ -1,4 +1,5 @@
 import { sql } from "@/lib/db";
+import { getCurrentUser, isAdmin } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
 const normalizeCategories = (value: unknown) => {
@@ -39,11 +40,29 @@ const normalizeDate = (value: string | null) => {
 
 export async function POST(request: Request) {
   try {
-    const { news, status, categories, recommended, title, thumbnail } =
+    const user = await getCurrentUser(sql);
+
+    if (!isAdmin(user)) {
+      return NextResponse.json(
+        { success: false, error: "Only admins can create news" },
+        { status: 403 },
+      );
+    }
+
+    const {
+      news,
+      status,
+      categories,
+      recommended,
+      title,
+      thumbnail,
+      politicalParty,
+    } =
       await request.json();
     const safeTitle = String(title || "").trim();
     const safeCategories = normalizeCategories(categories);
     const safeNews = normalizeNews(news);
+    const safePoliticalParty = String(politicalParty || "").trim() || null;
 
     if (!safeTitle) {
       return NextResponse.json(
@@ -60,13 +79,23 @@ export async function POST(request: Request) {
     }
 
     const newsRes = await sql`
-      INSERT INTO news (news, status, recommended, title, thumbnail)
+      INSERT INTO news (
+        news,
+        status,
+        recommended,
+        title,
+        thumbnail,
+        political_party,
+        author_id
+      )
       VALUES (
         ${JSON.stringify(safeNews)},
         ${Boolean(status)},
         ${Boolean(recommended)},
         ${safeTitle},
-        ${thumbnail || null}
+        ${thumbnail || null},
+        ${safePoliticalParty},
+        ${user.id}
       )
       RETURNING id
     `;
@@ -121,6 +150,8 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
   try {
+    const user = await getCurrentUser(sql);
+    const admin = isAdmin(user);
     const { searchParams } = new URL(request.url);
     const publishDate = normalizeDate(searchParams.get("publish-date"));
     const categoryIds = normalizeCategoryIds(searchParams.get("category"));
@@ -134,6 +165,7 @@ export async function GET(request: Request) {
     JOIN news_categories nc ON n.id = nc.news_id
     JOIN categories c ON c.id = nc.category_id
     WHERE c.id = ANY(${categoryIds}::int[])
+    AND (${admin} OR n.status = TRUE)
     AND n.created_at >= ${publishDate}
     AND n.created_at < ${publishDate}::date + INTERVAL '1 day'
     ORDER BY n.created_at DESC
@@ -145,13 +177,15 @@ export async function GET(request: Request) {
     JOIN news_categories nc ON n.id = nc.news_id
     JOIN categories c ON c.id = nc.category_id
     WHERE c.id = ANY(${categoryIds}::int[])
+    AND (${admin} OR n.status = TRUE)
     ORDER BY n.created_at DESC
   `;
     } else if (publishDate) {
       news = await sql`
         SELECT *
         FROM news
-        WHERE created_at >= ${publishDate}
+        WHERE (${admin} OR status = TRUE)
+        AND created_at >= ${publishDate}
         AND created_at < ${publishDate}::date + INTERVAL '1 day'
         ORDER BY created_at DESC
       `;
@@ -159,6 +193,7 @@ export async function GET(request: Request) {
       news = await sql`
         SELECT *
         FROM news
+        WHERE (${admin} OR status = TRUE)
         ORDER BY created_at DESC
       `;
     }
