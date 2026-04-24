@@ -13,6 +13,14 @@ const buildNewsQuery = (filters = {}) => {
     searchParams.set("category", filters.categoryIds.join(","));
   }
 
+  if (Array.isArray(filters.categoryNames) && filters.categoryNames.length > 0) {
+    searchParams.set("category-name", filters.categoryNames.join(","));
+  }
+
+  if (filters.query) {
+    searchParams.set("q", filters.query);
+  }
+
   const query = searchParams.toString();
 
   return query ? `/api/news?${query}` : "/api/news";
@@ -49,6 +57,12 @@ export const useGetNews = (filters = {}) => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    if (filters.skip) {
+      setNews([]);
+      setLoading(false);
+      return;
+    }
+
     const getNews = async () => {
       setLoading(true);
 
@@ -56,13 +70,21 @@ export const useGetNews = (filters = {}) => {
 
       if (res?.data) {
         setNews(res.data);
+      } else {
+        setNews([]);
       }
 
       setLoading(false);
     };
 
     getNews();
-  }, [filters.publishDate, JSON.stringify(filters.categoryIds || [])]);
+  }, [
+    filters.publishDate,
+    filters.query,
+    filters.skip,
+    JSON.stringify(filters.categoryIds || []),
+    JSON.stringify(filters.categoryNames || []),
+  ]);
 
   return { news, loading };
 };
@@ -148,8 +170,16 @@ export const useCategories = () => {
         setCategories(
           Array.isArray(res.data)
             ? res.data
-                .map((item) => (typeof item === "string" ? item : item?.name))
-                .filter(Boolean)
+                .map((item) =>
+                  typeof item === "string"
+                    ? { name: item, slug: item }
+                    : {
+                        id: item?.id,
+                        name: item?.name,
+                        slug: item?.slug,
+                      },
+                )
+                .filter((item) => item?.name)
             : [],
         );
       }

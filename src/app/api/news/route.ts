@@ -25,11 +25,35 @@ const normalizeCategoryIds = (value: string | null) => {
   ];
 };
 
+const normalizeCategoryNames = (value: string | null) => {
+  if (!value) {
+    return [];
+  }
+
+  return [
+    ...new Set(
+      value
+        .split(",")
+        .map((item) => String(item).trim())
+        .filter(Boolean),
+    ),
+  ];
+};
+
 const normalizeNews = (value: unknown) => {
   return Array.isArray(value) ? value : [];
 };
 
 const normalizeDate = (value: string | null) => {
+  if (!value) {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  return trimmed || null;
+};
+
+const normalizeSearch = (value: string | null) => {
   if (!value) {
     return null;
   }
@@ -155,10 +179,12 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const publishDate = normalizeDate(searchParams.get("publish-date"));
     const categoryIds = normalizeCategoryIds(searchParams.get("category"));
+    const categoryNames = normalizeCategoryNames(searchParams.get("category-name"));
+    const search = normalizeSearch(searchParams.get("q"));
 
     let news;
 
-    if (categoryIds.length > 0 && publishDate) {
+    if (categoryIds.length > 0 && publishDate && search) {
       news = await sql`
     SELECT DISTINCT n.*
     FROM news n
@@ -168,6 +194,82 @@ export async function GET(request: Request) {
     AND (${admin} OR n.status = TRUE)
     AND n.created_at >= ${publishDate}
     AND n.created_at < ${publishDate}::date + INTERVAL '1 day'
+    AND (
+      n.title ILIKE ${`%${search}%`}
+      OR COALESCE(n.political_party, '') ILIKE ${`%${search}%`}
+      OR CAST(n.news AS TEXT) ILIKE ${`%${search}%`}
+    )
+    ORDER BY n.created_at DESC
+  `;
+    } else if (categoryNames.length > 0 && publishDate && search) {
+      news = await sql`
+    SELECT DISTINCT n.*
+    FROM news n
+    JOIN news_categories nc ON n.id = nc.news_id
+    JOIN categories c ON c.id = nc.category_id
+    WHERE c.name = ANY(${categoryNames})
+    AND (${admin} OR n.status = TRUE)
+    AND n.created_at >= ${publishDate}
+    AND n.created_at < ${publishDate}::date + INTERVAL '1 day'
+    AND (
+      n.title ILIKE ${`%${search}%`}
+      OR COALESCE(n.political_party, '') ILIKE ${`%${search}%`}
+      OR CAST(n.news AS TEXT) ILIKE ${`%${search}%`}
+    )
+    ORDER BY n.created_at DESC
+  `;
+    } else if (categoryIds.length > 0 && publishDate) {
+      news = await sql`
+    SELECT DISTINCT n.*
+    FROM news n
+    JOIN news_categories nc ON n.id = nc.news_id
+    JOIN categories c ON c.id = nc.category_id
+    WHERE c.id = ANY(${categoryIds}::int[])
+    AND (${admin} OR n.status = TRUE)
+    AND n.created_at >= ${publishDate}
+    AND n.created_at < ${publishDate}::date + INTERVAL '1 day'
+    ORDER BY n.created_at DESC
+  `;
+    } else if (categoryNames.length > 0 && publishDate) {
+      news = await sql`
+    SELECT DISTINCT n.*
+    FROM news n
+    JOIN news_categories nc ON n.id = nc.news_id
+    JOIN categories c ON c.id = nc.category_id
+    WHERE c.name = ANY(${categoryNames})
+    AND (${admin} OR n.status = TRUE)
+    AND n.created_at >= ${publishDate}
+    AND n.created_at < ${publishDate}::date + INTERVAL '1 day'
+    ORDER BY n.created_at DESC
+  `;
+    } else if (categoryIds.length > 0 && search) {
+      news = await sql`
+    SELECT DISTINCT n.*
+    FROM news n
+    JOIN news_categories nc ON n.id = nc.news_id
+    JOIN categories c ON c.id = nc.category_id
+    WHERE c.id = ANY(${categoryIds}::int[])
+    AND (${admin} OR n.status = TRUE)
+    AND (
+      n.title ILIKE ${`%${search}%`}
+      OR COALESCE(n.political_party, '') ILIKE ${`%${search}%`}
+      OR CAST(n.news AS TEXT) ILIKE ${`%${search}%`}
+    )
+    ORDER BY n.created_at DESC
+  `;
+    } else if (categoryNames.length > 0 && search) {
+      news = await sql`
+    SELECT DISTINCT n.*
+    FROM news n
+    JOIN news_categories nc ON n.id = nc.news_id
+    JOIN categories c ON c.id = nc.category_id
+    WHERE c.name = ANY(${categoryNames})
+    AND (${admin} OR n.status = TRUE)
+    AND (
+      n.title ILIKE ${`%${search}%`}
+      OR COALESCE(n.political_party, '') ILIKE ${`%${search}%`}
+      OR CAST(n.news AS TEXT) ILIKE ${`%${search}%`}
+    )
     ORDER BY n.created_at DESC
   `;
     } else if (categoryIds.length > 0) {
@@ -180,6 +282,30 @@ export async function GET(request: Request) {
     AND (${admin} OR n.status = TRUE)
     ORDER BY n.created_at DESC
   `;
+    } else if (categoryNames.length > 0) {
+      news = await sql`
+    SELECT DISTINCT n.*
+    FROM news n
+    JOIN news_categories nc ON n.id = nc.news_id
+    JOIN categories c ON c.id = nc.category_id
+    WHERE c.name = ANY(${categoryNames})
+    AND (${admin} OR n.status = TRUE)
+    ORDER BY n.created_at DESC
+  `;
+    } else if (publishDate && search) {
+      news = await sql`
+        SELECT *
+        FROM news
+        WHERE (${admin} OR status = TRUE)
+        AND created_at >= ${publishDate}
+        AND created_at < ${publishDate}::date + INTERVAL '1 day'
+        AND (
+          title ILIKE ${`%${search}%`}
+          OR COALESCE(political_party, '') ILIKE ${`%${search}%`}
+          OR CAST(news AS TEXT) ILIKE ${`%${search}%`}
+        )
+        ORDER BY created_at DESC
+      `;
     } else if (publishDate) {
       news = await sql`
         SELECT *
@@ -187,6 +313,18 @@ export async function GET(request: Request) {
         WHERE (${admin} OR status = TRUE)
         AND created_at >= ${publishDate}
         AND created_at < ${publishDate}::date + INTERVAL '1 day'
+        ORDER BY created_at DESC
+      `;
+    } else if (search) {
+      news = await sql`
+        SELECT *
+        FROM news
+        WHERE (${admin} OR status = TRUE)
+        AND (
+          title ILIKE ${`%${search}%`}
+          OR COALESCE(political_party, '') ILIKE ${`%${search}%`}
+          OR CAST(news AS TEXT) ILIKE ${`%${search}%`}
+        )
         ORDER BY created_at DESC
       `;
     } else {

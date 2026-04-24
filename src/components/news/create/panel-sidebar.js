@@ -41,7 +41,14 @@ export const PanelSidebar = () => {
   } = useEditNews();
 
   const availableCategories = useMemo(
-    () => [...new Set(fetchedCategories)].filter(Boolean),
+    () =>
+      [
+        ...new Set(
+          fetchedCategories
+            .map((item) => (typeof item === "string" ? item : item?.name))
+            .filter(Boolean),
+        ),
+      ],
     [fetchedCategories],
   );
 

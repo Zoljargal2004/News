@@ -1,14 +1,21 @@
 import { sql } from "@/lib/db";
+import { slugifyCategory } from "@/lib/categories";
 import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
     const categoryRows = await sql`
-      SELECT name FROM categories
+      SELECT id, name FROM categories
       ORDER BY name ASC
     `;
     return NextResponse.json(
-      { success: true, data: categoryRows },
+      {
+        success: true,
+        data: categoryRows.map((item) => ({
+          ...item,
+          slug: slugifyCategory(item.name),
+        })),
+      },
       { status: 200 },
     );
   } catch (e) {
