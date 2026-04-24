@@ -1,3 +1,5 @@
+import { ForgotPassword } from "@/components/auth/forgot-password/inputs";
+
 export default function Page() {
   return (
     <main className="min-h-screen bg-[linear-gradient(135deg,#f8f6f1_0%,#fbfbfb_32%,#ffffff_100%)]">
