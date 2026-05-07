@@ -1,11 +1,13 @@
 import { cookies } from "next/headers";
 import { createHash, randomBytes, scryptSync, timingSafeEqual } from "crypto";
+import { connectDB } from "@/lib/db";
+import { serializeUser, Session } from "@/lib/models";
 
 export const SESSION_COOKIE_NAME = "newsletter_session";
 const SESSION_DURATION_MS = 1000 * 60 * 60 * 24 * 7;
 const getAuthSecret = () =>
   process.env.AUTH_SECRET ||
-  process.env.DATABASE_URL ||
+  process.env.MONGODB_URI ||
   "newsletter-dev-secret";
 
 export const normalizeEmail = (value: unknown) => {
@@ -37,45 +39,42 @@ export const verifyPassword = (password: string, hashedPassword: string) => {
 };
 
 export const sanitizeUser = (user: any) => {
-  if (!user) {
-    return null;
-  }
-
-  return {
-    id: user.id,
-    name: user.name,
-    email: user.email,
-    role: user.role,
-  };
+  return serializeUser(user);
 };
 
-export const createSession = async (sql: any, userId: number) => {
+export const createSession = async (dbOrUserId: any, maybeUserId?: string) => {
+  const userId = maybeUserId || dbOrUserId;
   const token = randomBytes(32).toString("hex");
   const tokenHash = createHash("sha256").update(token).digest("hex");
   const expiresAt = new Date(Date.now() + SESSION_DURATION_MS);
 
-  await sql`
-    INSERT INTO auth_sessions (user_id, token_hash, expires_at)
-    VALUES (${userId}, ${tokenHash}, ${expiresAt.toISOString()})
-  `;
+  await connectDB();
+  await Session.create({
+    user_id: userId,
+    token_hash: tokenHash,
+    expires_at: expiresAt,
+  });
 
   return { token, expiresAt };
 };
 
-export const deleteSession = async (sql: any, token: string | undefined) => {
+export const deleteSession = async (
+  dbOrToken: any,
+  maybeToken?: string | undefined,
+) => {
+  const token = maybeToken || dbOrToken;
+
   if (!token) {
     return;
   }
 
   const tokenHash = createHash("sha256").update(token).digest("hex");
 
-  await sql`
-    DELETE FROM auth_sessions
-    WHERE token_hash = ${tokenHash}
-  `;
+  await connectDB();
+  await Session.deleteOne({ token_hash: tokenHash });
 };
 
-export const getCurrentUser = async (sql: any) => {
+export const getCurrentUser = async (_db?: any) => {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
@@ -85,21 +84,21 @@ export const getCurrentUser = async (sql: any) => {
     }
 
     const tokenHash = createHash("sha256").update(token).digest("hex");
-    const rows = await sql`
-      SELECT u.id, u.name, u.email, u.role
-      FROM auth_sessions s
-      JOIN users u ON u.id = s.user_id
-      WHERE s.token_hash = ${tokenHash}
-      AND s.expires_at > NOW()
-      LIMIT 1
-    `;
+    await connectDB();
 
-    return sanitizeUser(rows[0]);
-  } catch (error: any) {
-    if (error?.code === "42P01") {
+    const session = await Session.findOne({
+      token_hash: tokenHash,
+      expires_at: { $gt: new Date() },
+    })
+      .populate("user_id", "name email role")
+      .lean();
+
+    if (!session?.user_id) {
       return null;
     }
 
+    return sanitizeUser(session.user_id);
+  } catch (error: any) {
     throw error;
   }
 };
@@ -116,10 +115,6 @@ export const getSessionCookieOptions = (expiresAt?: Date) => ({
   path: "/",
   expires: expiresAt,
 });
-
-export const isMissingAuthTableError = (error: any) => {
-  return error?.code === "42P01";
-};
 
 export const isAdmin = (user: any) => {
   return user?.role === "admin";

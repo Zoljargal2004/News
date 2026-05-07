@@ -1,27 +1,22 @@
 import { getCurrentUser, isAdmin } from "@/lib/auth";
-import { sql } from "@/lib/db";
+import { connectDB } from "@/lib/db";
+import { Comment, isObjectId, News, serializeComment } from "@/lib/models";
 import { NextResponse } from "next/server";
 
+export const runtime = "nodejs";
+
 const normalizeId = (value: string) => {
-  const id = Number(value);
-
-  if (!Number.isInteger(id) || id <= 0) {
-    return null;
-  }
-
-  return id;
+  return isObjectId(value) ? value : null;
 };
 
-const getNewsAccess = async (newsId: number, admin: boolean) => {
-  const rows = await sql`
-    SELECT id
-    FROM news
-    WHERE id = ${newsId}
-    AND (${admin} OR status = TRUE)
-    LIMIT 1
-  `;
+const getNewsAccess = async (newsId: string, admin: boolean) => {
+  const filter: Record<string, any> = { _id: newsId };
 
-  return rows[0] || null;
+  if (!admin) {
+    filter.status = true;
+  }
+
+  return News.exists(filter);
 };
 
 export async function GET(
@@ -29,7 +24,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const user = await getCurrentUser(sql);
+    await connectDB();
+
+    const user = await getCurrentUser();
     const admin = isAdmin(user);
     const { id: rawId } = await params;
     const newsId = normalizeId(rawId);
@@ -50,28 +47,22 @@ export async function GET(
       );
     }
 
-    const comments = await sql`
-      SELECT
-        c.id,
-        c.content,
-        c.created_at,
-        c.updated_at,
-        u.id AS user_id,
-        u.name AS user_name,
-        u.role AS user_role
-      FROM comments c
-      JOIN users u ON u.id = c.user_id
-      WHERE c.news_id = ${newsId}
-      ORDER BY c.created_at DESC
-    `;
+    const comments = await Comment.find({ news_id: newsId })
+      .sort({ created_at: -1 })
+      .populate("user_id", "name role")
+      .lean();
 
-    return NextResponse.json({ success: true, data: comments });
+    return NextResponse.json({
+      success: true,
+      data: comments.map(serializeComment),
+    });
   } catch (error) {
     console.error(error);
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to fetch comments",
+        error:
+          error instanceof Error ? error.message : "Failed to fetch comments",
       },
       { status: 500 },
     );
@@ -83,7 +74,9 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const user = await getCurrentUser(sql);
+    await connectDB();
+
+    const user = await getCurrentUser();
 
     if (!user) {
       return NextResponse.json(
@@ -121,16 +114,16 @@ export async function POST(
       );
     }
 
-    const rows = await sql`
-      INSERT INTO comments (news_id, user_id, content)
-      VALUES (${newsId}, ${user.id}, ${safeContent})
-      RETURNING id, content, created_at, updated_at
-    `;
+    const comment = await Comment.create({
+      news_id: newsId,
+      user_id: user.id,
+      content: safeContent,
+    });
 
     return NextResponse.json({
       success: true,
       data: {
-        ...rows[0],
+        ...serializeComment(comment),
         user_id: user.id,
         user_name: user.name,
         user_role: user.role,
@@ -141,7 +134,8 @@ export async function POST(
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Failed to create comment",
+        error:
+          error instanceof Error ? error.message : "Failed to create comment",
       },
       { status: 500 },
     );

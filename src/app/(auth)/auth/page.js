@@ -1,10 +1,9 @@
 import { Auth } from "@/components/auth/auth";
 import { getCurrentUser } from "@/lib/auth";
-import { sql } from "@/lib/db";
 import { redirect } from "next/navigation";
 
 export default async function Page() {
-  const user = await getCurrentUser(sql);
+  const user = await getCurrentUser();
 
   if (user) {
     redirect("/");

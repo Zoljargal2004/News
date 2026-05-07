@@ -1,6 +1,9 @@
-import { sql } from "@/lib/db";
 import { getCurrentUser, isAdmin } from "@/lib/auth";
+import { connectDB } from "@/lib/db";
+import { Category, isObjectId, News, serializeNews } from "@/lib/models";
 import { NextResponse } from "next/server";
+
+export const runtime = "nodejs";
 
 const normalizeCategories = (value: unknown) => {
   if (!Array.isArray(value)) {
@@ -19,8 +22,8 @@ const normalizeCategoryIds = (value: string | null) => {
     ...new Set(
       value
         .split(",")
-        .map((item) => Number(item.trim()))
-        .filter((item) => Number.isInteger(item) && item > 0),
+        .map((item) => item.trim())
+        .filter((item) => isObjectId(item)),
     ),
   ];
 };
@@ -44,13 +47,27 @@ const normalizeNews = (value: unknown) => {
   return Array.isArray(value) ? value : [];
 };
 
-const normalizeDate = (value: string | null) => {
+const normalizePublishRange = (value: string | null) => {
   if (!value) {
     return null;
   }
 
   const trimmed = value.trim();
-  return trimmed || null;
+
+  if (!trimmed) {
+    return null;
+  }
+
+  const start = new Date(`${trimmed}T00:00:00.000Z`);
+
+  if (Number.isNaN(start.getTime())) {
+    return null;
+  }
+
+  const end = new Date(start);
+  end.setUTCDate(end.getUTCDate() + 1);
+
+  return { start, end };
 };
 
 const normalizeSearch = (value: string | null) => {
@@ -62,9 +79,38 @@ const normalizeSearch = (value: string | null) => {
   return trimmed || null;
 };
 
+const escapeRegex = (value: string) => {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+};
+
+const getCategoryFilterIds = async (
+  categoryIds: string[],
+  categoryNames: string[],
+) => {
+  if (categoryIds.length === 0 && categoryNames.length === 0) {
+    return [];
+  }
+
+  const filters = [];
+
+  if (categoryIds.length > 0) {
+    filters.push({ _id: { $in: categoryIds } });
+  }
+
+  if (categoryNames.length > 0) {
+    filters.push({ name: { $in: categoryNames } });
+  }
+
+  const categories = await Category.find({ $or: filters }).select("_id").lean();
+
+  return categories.map((category) => category._id);
+};
+
 export async function POST(request: Request) {
   try {
-    const user = await getCurrentUser(sql);
+    await connectDB();
+
+    const user = await getCurrentUser();
 
     if (!isAdmin(user)) {
       return NextResponse.json(
@@ -81,8 +127,7 @@ export async function POST(request: Request) {
       title,
       thumbnail,
       politicalParty,
-    } =
-      await request.json();
+    } = await request.json();
     const safeTitle = String(title || "").trim();
     const safeCategories = normalizeCategories(categories);
     const safeNews = normalizeNews(news);
@@ -102,64 +147,31 @@ export async function POST(request: Request) {
       );
     }
 
-    const newsRes = await sql`
-      INSERT INTO news (
-        news,
-        status,
-        recommended,
-        title,
-        thumbnail,
-        political_party,
-        author_id
-      )
-      VALUES (
-        ${JSON.stringify(safeNews)},
-        ${Boolean(status)},
-        ${Boolean(recommended)},
-        ${safeTitle},
-        ${thumbnail || null},
-        ${safePoliticalParty},
-        ${user.id}
-      )
-      RETURNING id
-    `;
+    const categoryRows = await Promise.all(
+      safeCategories.map((name) =>
+        Category.findOneAndUpdate(
+          { name },
+          { $setOnInsert: { name } },
+          { new: true, upsert: true, setDefaultsOnInsert: true },
+        ),
+      ),
+    );
 
-    const newsId = newsRes[0]?.id;
+    const createdNews = await News.create({
+      news: safeNews,
+      status: Boolean(status),
+      recommended: Boolean(recommended),
+      title: safeTitle,
+      thumbnail: thumbnail || null,
+      political_party: safePoliticalParty,
+      author_id: user.id,
+      categories: categoryRows.map((category) => category._id),
+    });
 
-    if (!newsId) {
-      throw new Error("Failed to create news row");
-    }
-
-    if (safeCategories.length > 0) {
-      const categoryRows = await sql`
-        SELECT id, name FROM categories
-        WHERE name = ANY(${safeCategories})
-      `;
-
-      if (categoryRows.length !== safeCategories.length) {
-        const foundNames = new Set(categoryRows.map((row) => row.name));
-        const missingCategories = safeCategories.filter(
-          (name) => !foundNames.has(name),
-        );
-
-        return NextResponse.json(
-          {
-            success: false,
-            error: `Unknown categories: ${missingCategories.join(", ")}`,
-          },
-          { status: 400 },
-        );
-      }
-
-      for (const category of categoryRows) {
-        await sql`
-          INSERT INTO news_categories (news_id, category_id)
-          VALUES (${newsId}, ${category.id})
-        `;
-      }
-    }
-
-    return NextResponse.json({ success: true, data: { id: newsId } });
+    return NextResponse.json({
+      success: true,
+      data: { id: createdNews._id.toString() },
+    });
   } catch (e) {
     console.error(e);
     return NextResponse.json(
@@ -174,171 +186,61 @@ export async function POST(request: Request) {
 
 export async function GET(request: Request) {
   try {
-    const user = await getCurrentUser(sql);
+    await connectDB();
+
+    const user = await getCurrentUser();
     const admin = isAdmin(user);
     const { searchParams } = new URL(request.url);
-    const publishDate = normalizeDate(searchParams.get("publish-date"));
+    const publishRange = normalizePublishRange(searchParams.get("publish-date"));
     const categoryIds = normalizeCategoryIds(searchParams.get("category"));
     const categoryNames = normalizeCategoryNames(searchParams.get("category-name"));
     const search = normalizeSearch(searchParams.get("q"));
+    const filter: Record<string, any> = {};
 
-    let news;
-
-    if (categoryIds.length > 0 && publishDate && search) {
-      news = await sql`
-    SELECT DISTINCT n.*
-    FROM news n
-    JOIN news_categories nc ON n.id = nc.news_id
-    JOIN categories c ON c.id = nc.category_id
-    WHERE c.id = ANY(${categoryIds}::int[])
-    AND (${admin} OR n.status = TRUE)
-    AND n.created_at >= ${publishDate}
-    AND n.created_at < ${publishDate}::date + INTERVAL '1 day'
-    AND (
-      n.title ILIKE ${`%${search}%`}
-      OR COALESCE(n.political_party, '') ILIKE ${`%${search}%`}
-      OR CAST(n.news AS TEXT) ILIKE ${`%${search}%`}
-    )
-    ORDER BY n.created_at DESC
-  `;
-    } else if (categoryNames.length > 0 && publishDate && search) {
-      news = await sql`
-    SELECT DISTINCT n.*
-    FROM news n
-    JOIN news_categories nc ON n.id = nc.news_id
-    JOIN categories c ON c.id = nc.category_id
-    WHERE c.name = ANY(${categoryNames})
-    AND (${admin} OR n.status = TRUE)
-    AND n.created_at >= ${publishDate}
-    AND n.created_at < ${publishDate}::date + INTERVAL '1 day'
-    AND (
-      n.title ILIKE ${`%${search}%`}
-      OR COALESCE(n.political_party, '') ILIKE ${`%${search}%`}
-      OR CAST(n.news AS TEXT) ILIKE ${`%${search}%`}
-    )
-    ORDER BY n.created_at DESC
-  `;
-    } else if (categoryIds.length > 0 && publishDate) {
-      news = await sql`
-    SELECT DISTINCT n.*
-    FROM news n
-    JOIN news_categories nc ON n.id = nc.news_id
-    JOIN categories c ON c.id = nc.category_id
-    WHERE c.id = ANY(${categoryIds}::int[])
-    AND (${admin} OR n.status = TRUE)
-    AND n.created_at >= ${publishDate}
-    AND n.created_at < ${publishDate}::date + INTERVAL '1 day'
-    ORDER BY n.created_at DESC
-  `;
-    } else if (categoryNames.length > 0 && publishDate) {
-      news = await sql`
-    SELECT DISTINCT n.*
-    FROM news n
-    JOIN news_categories nc ON n.id = nc.news_id
-    JOIN categories c ON c.id = nc.category_id
-    WHERE c.name = ANY(${categoryNames})
-    AND (${admin} OR n.status = TRUE)
-    AND n.created_at >= ${publishDate}
-    AND n.created_at < ${publishDate}::date + INTERVAL '1 day'
-    ORDER BY n.created_at DESC
-  `;
-    } else if (categoryIds.length > 0 && search) {
-      news = await sql`
-    SELECT DISTINCT n.*
-    FROM news n
-    JOIN news_categories nc ON n.id = nc.news_id
-    JOIN categories c ON c.id = nc.category_id
-    WHERE c.id = ANY(${categoryIds}::int[])
-    AND (${admin} OR n.status = TRUE)
-    AND (
-      n.title ILIKE ${`%${search}%`}
-      OR COALESCE(n.political_party, '') ILIKE ${`%${search}%`}
-      OR CAST(n.news AS TEXT) ILIKE ${`%${search}%`}
-    )
-    ORDER BY n.created_at DESC
-  `;
-    } else if (categoryNames.length > 0 && search) {
-      news = await sql`
-    SELECT DISTINCT n.*
-    FROM news n
-    JOIN news_categories nc ON n.id = nc.news_id
-    JOIN categories c ON c.id = nc.category_id
-    WHERE c.name = ANY(${categoryNames})
-    AND (${admin} OR n.status = TRUE)
-    AND (
-      n.title ILIKE ${`%${search}%`}
-      OR COALESCE(n.political_party, '') ILIKE ${`%${search}%`}
-      OR CAST(n.news AS TEXT) ILIKE ${`%${search}%`}
-    )
-    ORDER BY n.created_at DESC
-  `;
-    } else if (categoryIds.length > 0) {
-      news = await sql`
-    SELECT DISTINCT n.*
-    FROM news n
-    JOIN news_categories nc ON n.id = nc.news_id
-    JOIN categories c ON c.id = nc.category_id
-    WHERE c.id = ANY(${categoryIds}::int[])
-    AND (${admin} OR n.status = TRUE)
-    ORDER BY n.created_at DESC
-  `;
-    } else if (categoryNames.length > 0) {
-      news = await sql`
-    SELECT DISTINCT n.*
-    FROM news n
-    JOIN news_categories nc ON n.id = nc.news_id
-    JOIN categories c ON c.id = nc.category_id
-    WHERE c.name = ANY(${categoryNames})
-    AND (${admin} OR n.status = TRUE)
-    ORDER BY n.created_at DESC
-  `;
-    } else if (publishDate && search) {
-      news = await sql`
-        SELECT *
-        FROM news
-        WHERE (${admin} OR status = TRUE)
-        AND created_at >= ${publishDate}
-        AND created_at < ${publishDate}::date + INTERVAL '1 day'
-        AND (
-          title ILIKE ${`%${search}%`}
-          OR COALESCE(political_party, '') ILIKE ${`%${search}%`}
-          OR CAST(news AS TEXT) ILIKE ${`%${search}%`}
-        )
-        ORDER BY created_at DESC
-      `;
-    } else if (publishDate) {
-      news = await sql`
-        SELECT *
-        FROM news
-        WHERE (${admin} OR status = TRUE)
-        AND created_at >= ${publishDate}
-        AND created_at < ${publishDate}::date + INTERVAL '1 day'
-        ORDER BY created_at DESC
-      `;
-    } else if (search) {
-      news = await sql`
-        SELECT *
-        FROM news
-        WHERE (${admin} OR status = TRUE)
-        AND (
-          title ILIKE ${`%${search}%`}
-          OR COALESCE(political_party, '') ILIKE ${`%${search}%`}
-          OR CAST(news AS TEXT) ILIKE ${`%${search}%`}
-        )
-        ORDER BY created_at DESC
-      `;
-    } else {
-      news = await sql`
-        SELECT *
-        FROM news
-        WHERE (${admin} OR status = TRUE)
-        ORDER BY created_at DESC
-      `;
+    if (!admin) {
+      filter.status = true;
     }
+
+    if (publishRange) {
+      filter.created_at = {
+        $gte: publishRange.start,
+        $lt: publishRange.end,
+      };
+    }
+
+    if (search) {
+      const searchRegex = new RegExp(escapeRegex(search), "i");
+
+      filter.$or = [
+        { title: searchRegex },
+        { political_party: searchRegex },
+        { "news.value": searchRegex },
+        { "news.src": searchRegex },
+      ];
+    }
+
+    if (categoryIds.length > 0 || categoryNames.length > 0) {
+      const filterCategoryIds = await getCategoryFilterIds(
+        categoryIds,
+        categoryNames,
+      );
+
+      if (filterCategoryIds.length === 0) {
+        return NextResponse.json({ success: true, data: [] });
+      }
+
+      filter.categories = { $in: filterCategoryIds };
+    }
+
+    const news = await News.find(filter)
+      .sort({ created_at: -1 })
+      .populate("author_id", "name email")
+      .populate("categories", "name")
+      .lean();
 
     return NextResponse.json({
       success: true,
-      data: news,
+      data: news.map(serializeNews),
     });
   } catch (e) {
     console.error(e);

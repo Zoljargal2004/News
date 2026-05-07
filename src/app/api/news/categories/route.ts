@@ -1,18 +1,21 @@
-import { sql } from "@/lib/db";
 import { slugifyCategory } from "@/lib/categories";
+import { connectDB } from "@/lib/db";
+import { Category, serializeCategory } from "@/lib/models";
 import { NextResponse } from "next/server";
+
+export const runtime = "nodejs";
 
 export async function GET() {
   try {
-    const categoryRows = await sql`
-      SELECT id, name FROM categories
-      ORDER BY name ASC
-    `;
+    await connectDB();
+
+    const categoryRows = await Category.find({}).sort({ name: 1 }).lean();
+
     return NextResponse.json(
       {
         success: true,
         data: categoryRows.map((item) => ({
-          ...item,
+          ...serializeCategory(item),
           slug: slugifyCategory(item.name),
         })),
       },
@@ -21,7 +24,7 @@ export async function GET() {
   } catch (e) {
     console.error(e);
     return NextResponse.json(
-      { success: false, error: "Upload failed" },
+      { success: false, error: "Failed to fetch categories" },
       { status: 500 },
     );
   }

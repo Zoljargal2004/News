@@ -1,15 +1,12 @@
-import { sql } from "@/lib/db";
 import { getCurrentUser, isAdmin } from "@/lib/auth";
+import { connectDB } from "@/lib/db";
+import { isObjectId, News, serializeNews } from "@/lib/models";
 import { NextResponse } from "next/server";
 
+export const runtime = "nodejs";
+
 const normalizeId = (value: string) => {
-  const id = Number(value);
-
-  if (!Number.isInteger(id) || id <= 0) {
-    return null;
-  }
-
-  return id;
+  return isObjectId(value) ? value : null;
 };
 
 export async function GET(
@@ -17,7 +14,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const user = await getCurrentUser(sql);
+    await connectDB();
+
+    const user = await getCurrentUser();
     const admin = isAdmin(user);
     const { id: rawId } = await params;
     const id = normalizeId(rawId);
@@ -29,25 +28,16 @@ export async function GET(
       );
     }
 
-    const rows = await sql`
-      SELECT
-        n.*,
-        u.name AS author_name,
-        u.email AS author_email,
-        COALESCE(
-          ARRAY_AGG(c.name) FILTER (WHERE c.name IS NOT NULL),
-          ARRAY[]::text[]
-        ) AS categories
-      FROM news n
-      LEFT JOIN users u ON u.id = n.author_id
-      LEFT JOIN news_categories nc ON n.id = nc.news_id
-      LEFT JOIN categories c ON c.id = nc.category_id
-      WHERE n.id = ${id}
-      AND (${admin} OR n.status = TRUE)
-      GROUP BY n.id, u.name, u.email
-    `;
+    const filter: Record<string, any> = { _id: id };
 
-    const news = rows[0];
+    if (!admin) {
+      filter.status = true;
+    }
+
+    const news = await News.findOne(filter)
+      .populate("author_id", "name email")
+      .populate("categories", "name")
+      .lean();
 
     if (!news) {
       return NextResponse.json(
@@ -58,7 +48,7 @@ export async function GET(
 
     return NextResponse.json({
       success: true,
-      data: news,
+      data: serializeNews(news),
     });
   } catch (e) {
     console.error(e);

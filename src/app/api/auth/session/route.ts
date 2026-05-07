@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { connectDB } from "@/lib/db";
 import {
   createSession,
   deleteSession,
   getSessionCookieOptions,
   getSessionToken,
-  isMissingAuthTableError,
   normalizeEmail,
   sanitizeUser,
   SESSION_COOKIE_NAME,
   verifyPassword,
 } from "@/lib/auth";
+import { User } from "@/lib/models";
+
+export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,15 +27,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const rows = await sql`
-      SELECT id, name, email, password, role
-      FROM users
-      WHERE email = ${safeEmail}
-      LIMIT 1
-    `;
-
-
-    const user = rows[0];
+    await connectDB();
+    const user = await User.findOne({ email: safeEmail })
+      .select("name email password role")
+      .lean();
 
     if (!user || !verifyPassword(safePassword, user.password)) {
       return NextResponse.json(
@@ -42,7 +39,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { token, expiresAt } = await createSession(sql, user.id);
+    const { token, expiresAt } = await createSession(user._id.toString());
     const response = NextResponse.json({
       success: true,
       data: sanitizeUser(user),
@@ -57,16 +54,6 @@ export async function POST(request: NextRequest) {
     return response;
   } catch (e) {
     console.error(e);
-    if (isMissingAuthTableError(e)) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Auth tables are missing. Run src/lib/auth-schema.sql in your database first.",
-        },
-        { status: 500 },
-      );
-    }
-
     return NextResponse.json(
       {
         success: false,
@@ -80,7 +67,7 @@ export async function POST(request: NextRequest) {
 export async function DELETE() {
   try {
     const token = await getSessionToken();
-    await deleteSession(sql, token);
+    await deleteSession(token);
 
     const response = NextResponse.json({ success: true });
     response.cookies.set(SESSION_COOKIE_NAME, "", {

@@ -1,19 +1,21 @@
-import { sql } from "@/lib/db";
+import { connectDB } from "@/lib/db";
 import {
   createSession,
   getCurrentUser,
   getSessionCookieOptions,
   hashPassword,
-  isMissingAuthTableError,
   normalizeEmail,
   sanitizeUser,
   SESSION_COOKIE_NAME,
 } from "@/lib/auth";
+import { User } from "@/lib/models";
 import { NextRequest, NextResponse } from "next/server";
+
+export const runtime = "nodejs";
 
 export async function GET() {
   try {
-    const user = await getCurrentUser(sql);
+    const user = await getCurrentUser();
 
     if (!user) {
       return NextResponse.json(
@@ -56,14 +58,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const existingUsers = await sql`
-      SELECT id
-      FROM users
-      WHERE email = ${safeEmail}
-      LIMIT 1
-    `;
+    await connectDB();
+    const existingUsers = await User.exists({ email: safeEmail });
 
-    if (existingUsers[0]) {
+    if (existingUsers) {
       return NextResponse.json(
         { success: false, error: "An account with this email already exists" },
         { status: 409 },
@@ -71,19 +69,20 @@ export async function POST(request: NextRequest) {
     }
 
     const hashedPassword = hashPassword(safePassword);
-    const userRows = await sql`
-      INSERT INTO users (name, email, password, role)
-      VALUES (${safeName}, ${safeEmail}, ${hashedPassword}, ${"reader"})
-      RETURNING id, name, email, role
-    `;
+    const newUser = await User.create({
+      name: safeName,
+      email: safeEmail,
+      password: hashedPassword,
+      role: "reader",
+    });
 
-    const user = sanitizeUser(userRows[0]);
+    const user = sanitizeUser(newUser);
 
     if (!user) {
       throw new Error("Failed to create user");
     }
 
-    const { token, expiresAt } = await createSession(sql, user.id);
+    const { token, expiresAt } = await createSession(user.id);
     const response = NextResponse.json({ success: true, data: user });
 
     response.cookies.set(
@@ -95,16 +94,6 @@ export async function POST(request: NextRequest) {
     return response;
   } catch (e) {
     console.error(e);
-    if (isMissingAuthTableError(e)) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Auth tables are missing. Run src/lib/auth-schema.sql in your database first.",
-        },
-        { status: 500 },
-      );
-    }
-
     return NextResponse.json(
       {
         success: false,
