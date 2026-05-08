@@ -12,11 +12,17 @@ export const SearchPageContent = ({ query }) => {
   });
 
   return (
-    <section className="mx-[200] flex flex-col gap-6">
-      <GreenBgTitle title="Search" className="text-4xl font-bold" />
-      {safeQuery ? <p>Results for: {safeQuery}</p> : <p>Type in the search bar to find news.</p>}
+    <section className="space-y-6">
+      <header className="space-y-2">
+        <GreenBgTitle title="Search" className="text-3xl font-semibold" />
+        <p className="text-sm text-muted-foreground">
+          {safeQuery
+            ? `Results for "${safeQuery}"`
+            : "Type in the search bar to find news."}
+        </p>
+      </header>
       {loading ? (
-        <p>Loading news...</p>
+        <p className="text-sm text-muted-foreground">Loading news...</p>
       ) : (
         <NewsList news={news} emptyText="No matching news found." />
       )}

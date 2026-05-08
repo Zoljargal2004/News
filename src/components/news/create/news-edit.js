@@ -22,7 +22,10 @@ export const NewsEdit = () => {
   };
 
   return (
-    <section className=" flex flex-col gap-8 mb-16">
+    <section className="mx-auto max-w-3xl space-y-5">
+      {news.length === 0 ? (
+        <p className="text-sm text-black/65">Эндээс бичиж эхлэнэ үү...</p>
+      ) : null}
       {news.map((ele, i) =>
         ele.type == "p" ? (
           <Editor
@@ -50,7 +53,7 @@ export const NewsEdit = () => {
 
 const Editor = ({ para, onChange }) => {
   return (
-    <div className="p-8 border-2 rounded-2xl">
+    <div className="rounded-2xl border border-black/20 bg-white p-3">
       <QuillEditor theme="snow" value={para} onChange={onChange} />
     </div>
   );
@@ -100,9 +103,9 @@ const NewsImageInput = ({ image, onChange }) => {
       <button
         type="button"
         onClick={openPicker}
-        className="group flex w-full overflow-hidden rounded-[26px] border border-black/10 bg-white text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+        className="group flex w-full overflow-hidden rounded-2xl border border-black/20 bg-[#d9d9d9] text-left transition hover:bg-[#d0d0d0]"
       >
-        <div className="flex h-[470] w-full items-center justify-center bg-[linear-gradient(135deg,#f8f8f8_0%,#e9e9e9_100%)]">
+        <div className="flex aspect-video w-full items-center justify-center">
           {image?.src ? (
             <img
               src={image.src}
@@ -110,15 +113,13 @@ const NewsImageInput = ({ image, onChange }) => {
               className="h-full w-full object-cover"
             />
           ) : (
-            <div className="flex flex-col items-center gap-4 text-black/45">
-              <div className="rounded-full bg-(--secondary-background) p-6">
-                <ImagePlus size={72} />
-              </div>
+            <div className="flex flex-col items-center gap-3 text-black/45">
+              <ImagePlus className="size-10" />
               <div className="text-center">
-                <p className="text-base font-semibold text-black">
+                <p className="text-sm font-medium text-foreground">
                   Upload image
                 </p>
-                <p className="text-sm">Click here to choose an image</p>
+                <p className="text-xs">Click to choose an image</p>
               </div>
             </div>
           )}

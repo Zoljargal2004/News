@@ -81,11 +81,11 @@ export const CommentsSection = ({ newsId }) => {
   };
 
   return (
-    <section>
-      <h2>Comments</h2>
+    <section className="border-t pt-8">
+      <h2 className="text-xl font-semibold">Comments</h2>
 
       {user ? (
-        <div>
+        <div className="mt-4 space-y-3">
           <Textarea
             value={content}
             onChange={(event) => setContent(event.target.value)}
@@ -97,20 +97,27 @@ export const CommentsSection = ({ newsId }) => {
         </div>
       ) : null}
 
-      {loading ? <p>Loading comments...</p> : null}
+      {loading ? (
+        <p className="mt-4 text-sm text-muted-foreground">Loading comments...</p>
+      ) : null}
 
-      {!loading && comments.length === 0 ? <p>No comments yet.</p> : null}
+      {!loading && comments.length === 0 ? (
+        <p className="mt-4 text-sm text-muted-foreground">No comments yet.</p>
+      ) : null}
 
-      {comments.map((comment) => (
-        <article key={comment.id}>
-          <p>
-            <strong>{comment.user_name}</strong>
-            {comment.user_role ? ` (${comment.user_role})` : ""}
-          </p>
-          <p>{formatDate(comment.created_at)}</p>
-          <p>{comment.content}</p>
-        </article>
-      ))}
+      <div className="mt-6 space-y-5">
+        {comments.map((comment) => (
+          <article key={comment.id} className="border-t pt-4">
+            <div className="flex flex-wrap items-center gap-2 text-sm">
+              <strong>{comment.user_name}</strong>
+              <span className="text-muted-foreground">
+                {formatDate(comment.created_at)}
+              </span>
+            </div>
+            <p>{comment.content}</p>
+          </article>
+        ))}
+      </div>
     </section>
   );
 };

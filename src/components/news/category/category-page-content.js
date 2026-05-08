@@ -14,18 +14,18 @@ export const CategoryPageContent = ({ slug }) => {
   });
 
   if (categoriesLoading) {
-    return <p>Loading category...</p>;
+    return <p className="text-sm text-muted-foreground">Loading category...</p>;
   }
 
   if (!category) {
-    return <p>Category not found.</p>;
+    return <p className="text-sm text-muted-foreground">Category not found.</p>;
   }
 
   return (
-    <section className="mx-[200] flex flex-col gap-6">
-      <GreenBgTitle title={category.name} className="text-4xl font-bold" />
+    <section className="space-y-6">
+      <GreenBgTitle title={category.name} className="text-3xl font-semibold" />
       {newsLoading ? (
-        <p>Loading news...</p>
+        <p className="text-sm text-muted-foreground">Loading news...</p>
       ) : (
         <NewsList news={news} emptyText="No news in this category yet." />
       )}

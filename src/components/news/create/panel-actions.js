@@ -18,12 +18,16 @@ export const PanelActions = () => {
   };
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2">
-      <Button className="h-14" onClick={addParagraphBlock}>
-        Add text block
+    <div className="mx-auto grid max-w-3xl gap-3 sm:grid-cols-2">
+      <Button className="h-10 rounded-full" onClick={addParagraphBlock}>
+        Text block
       </Button>
-      <Button className="h-14" variant="outline" onClick={addImageBlock}>
-        Add image block
+      <Button
+        className="h-10 rounded-full"
+        variant="outline"
+        onClick={addImageBlock}
+      >
+        Image block
       </Button>
     </div>
   );

@@ -7,7 +7,8 @@ const getBaseUrl = async () => {
   const host =
     headerStore.get("x-forwarded-host") || headerStore.get("host") || "";
   const protocol =
-    headerStore.get("x-forwarded-proto") || (host.includes("localhost") ? "http" : "https");
+    headerStore.get("x-forwarded-proto") ||
+    (host.includes("localhost") ? "http" : "https");
 
   return `${protocol}://${host}`;
 };
@@ -36,36 +37,50 @@ export default async function Page({ params }) {
   const news = await getNewsById(id);
 
   return (
-    <div className="flex w-full flex-col items-center gap-8">
-      <div className="h-[470] w-full overflow-hidden rounded-3xl">
+    <article className="mx-auto max-w-3xl space-y-8">
+      <div className="overflow-hidden rounded-lg bg-muted">
         <img
-          src={news?.thumbnail}
+          src={news?.thumbnail || "/newpapers.png"}
           alt={news?.title || "thumbnail"}
-          className="h-full w-full object-cover"
+          className="aspect-video w-full object-cover"
         />
       </div>
-      <span className="text-center text-6xl font-bold">{news?.title}</span>
-      {news?.political_party ? (
-        <p>Political party relevance: {news.political_party}</p>
-      ) : null}
-      {news?.author_name ? <p>Author: {news.author_name}</p> : null}
+
+      <header className="space-y-3">
+        <h1 className="text-3xl font-semibold tracking-tight sm:text-5xl">
+          {news?.title}
+        </h1>
+        <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
+          {news?.author_name ? <span>By {news.author_name}</span> : null}
+          {news?.political_party ? (
+            <span>Related party: {news.political_party}</span>
+          ) : null}
+        </div>
+      </header>
+
       <NewsBody body={news?.news || []} />
       <CommentsSection newsId={news.id} />
-    </div>
+    </article>
   );
 }
 
 const NewsBody = ({ body }) => {
   return (
-    <div className="flex w-full flex-col gap-4">
+    <div className="space-y-5 text-base leading-7">
       {body.map((ele, i) => {
         if (ele.type === "p") {
-          return <span key={i} dangerouslySetInnerHTML={{ __html: ele.value }} />;
+          return (
+            <div
+              key={i}
+              className="[&_p]:mb-4 [&_p:last-child]:mb-0"
+              dangerouslySetInnerHTML={{ __html: ele.value }}
+            />
+          );
         }
 
         if (ele.type === "image") {
           return (
-            <div key={i}>
+            <div key={i} className="overflow-hidden rounded-lg bg-muted">
               <img src={ele.src} alt="" className="w-full rounded-xl" />
             </div>
           );

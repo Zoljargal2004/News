@@ -29,10 +29,17 @@ export const connectDB = async () => {
     cached.promise = mongoose.connect(MONGODB_URI, {
       dbName: MONGODB_DB,
       bufferCommands: false,
+      serverSelectionTimeoutMS: 10000,
     });
   }
 
-  cached.conn = await cached.promise;
+  try {
+    cached.conn = await cached.promise;
+  } catch (error) {
+    cached.conn = null;
+    cached.promise = null;
+    throw error;
+  }
 
   return cached.conn;
 };

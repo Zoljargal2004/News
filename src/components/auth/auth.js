@@ -2,47 +2,42 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Apple, Check, Facebook, Lock, Mail, User2 } from "lucide-react";
-import { GreenBgTitle } from "@/components/general/title";
+import { Lock, Mail, User2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 
-const SOCIALS = [
-  {
-    label: "Google",
-    content: <span className="text-2xl font-black text-[#EA4335]">G</span>,
-  },
-  {
-    label: "Facebook",
-    content: <Facebook className="size-7 fill-[#1877F2] text-[#1877F2]" />,
-  },
-  {
-    label: "X",
-    content: <span className="text-2xl font-semibold">X</span>,
-  },
-  {
-    label: "Apple",
-    content: <Apple className="size-7 fill-black text-black" />,
-  },
-];
+const initialForm = {
+  name: "",
+  email: "",
+  password: "",
+};
 
 export const Auth = () => {
   const [mode, setMode] = useState("login");
+  const [form, setForm] = useState(initialForm);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const isLogin = mode === "login";
 
-  const submitAuth = async ({ endpoint, body, successMessage }) => {
+  const updateField = (field, value) => {
+    setForm((current) => ({ ...current, [field]: value }));
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    const endpoint = isLogin ? "/api/auth/session" : "/api/auth/user";
+    const body = isLogin
+      ? { email: form.email, password: form.password }
+      : form;
+
     try {
       setLoading(true);
 
       const res = await fetch(endpoint, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
       const payload = await res.json();
@@ -51,7 +46,7 @@ export const Auth = () => {
         throw new Error(payload?.error || "Authentication failed");
       }
 
-      toast(successMessage);
+      toast(isLogin ? "Signed in" : "Account created");
       router.push("/");
       router.refresh();
     } catch (error) {
@@ -62,252 +57,84 @@ export const Auth = () => {
   };
 
   return (
-    <section className="flex w-full max-w-[460px] flex-col items-center gap-8">
-      <div className="flex flex-col items-center gap-5 text-center">
-        <GreenBgTitle
-          title="newsletter.mn"
-          className="text-5xl font-black italic leading-none tracking-tight text-[#222]"
-        />
-        <div className="space-y-2">
-          <h1 className="text-5xl font-semibold tracking-tight text-[#2C2C2C]">
-            {isLogin ? "Нэвтрэх" : "Бүртгүүлэх"}
-          </h1>
-          <p className="text-lg text-[#606060]">
-            {isLogin
-              ? "Цахим шуудан, нууц үгээ ашиглан үргэлжлүүлнэ үү"
-              : "Шинэ хэрэглэгчийн бүртгэлээ үүсгээд шууд эхлээрэй"}
-          </p>
-        </div>
-      </div>
+    <section className="w-full max-w-md space-y-8">
+      <header className="space-y-2">
+        <p className="text-sm text-muted-foreground">Newsletter.mn</p>
+        <h1 className="text-3xl font-semibold tracking-tight">
+          {isLogin ? "Welcome back" : "Create an account"}
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          {isLogin
+            ? "Sign in to read, comment, and manage news."
+            : "Register to start reading and commenting."}
+        </p>
+      </header>
 
-      <div className="w-full space-y-5">
-        {isLogin ? (
-          <LoginForm
-            loading={loading}
-            onSubmit={(values) =>
-              submitAuth({
-                endpoint: "/api/auth/session",
-                body: values,
-                successMessage: "Амжилттай нэвтэрлээ",
-              })
-            }
+      <form className="space-y-4" onSubmit={handleSubmit}>
+        {!isLogin ? (
+          <Field label="Name" icon={<User2 className="size-4" />}>
+            <Input
+              value={form.name}
+              onChange={(event) => updateField("name", event.target.value)}
+              placeholder="Your name"
+              autoComplete="name"
+              required
+            />
+          </Field>
+        ) : null}
+
+        <Field label="Email" icon={<Mail className="size-4" />}>
+          <Input
+            type="email"
+            value={form.email}
+            onChange={(event) => updateField("email", event.target.value)}
+            placeholder="you@example.com"
+            autoComplete="email"
+            required
           />
-        ) : (
-          <RegisterForm
-            loading={loading}
-            onSubmit={(values) =>
-              submitAuth({
-                endpoint: "/api/auth/user",
-                body: values,
-                successMessage: "Амжилттай бүртгүүллээ",
-              })
-            }
+        </Field>
+
+        <Field label="Password" icon={<Lock className="size-4" />}>
+          <Input
+            type="password"
+            value={form.password}
+            onChange={(event) => updateField("password", event.target.value)}
+            placeholder="Password"
+            autoComplete={isLogin ? "current-password" : "new-password"}
+            required
+            minLength={6}
           />
-        )}
+        </Field>
 
-        <div className="space-y-4 pt-2">
-          <div className="flex items-center gap-4">
-            <div className="h-px flex-1 bg-[#DBDBDB]" />
-            <span className="text-sm text-[#7A7A7A]">эсвэл</span>
-            <div className="h-px flex-1 bg-[#DBDBDB]" />
-          </div>
+        <Button type="submit" className="h-10 w-full" disabled={loading}>
+          {loading ? "Please wait..." : isLogin ? "Sign in" : "Create account"}
+        </Button>
+      </form>
 
-          <div className="flex items-center justify-center gap-4">
-            {SOCIALS.map((item) => (
-              <button
-                key={item.label}
-                type="button"
-                aria-label={item.label}
-                className="flex size-14 items-center justify-center rounded-full border border-[#E7E7E7] bg-white shadow-[0_10px_30px_rgba(0,0,0,0.06)] transition-transform hover:-translate-y-0.5"
-              >
-                {item.content}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="flex flex-col items-center gap-2 text-center">
+      <p className="text-sm text-muted-foreground">
+        {isLogin ? "No account?" : "Already registered?"}{" "}
         <button
           type="button"
           onClick={() => setMode(isLogin ? "register" : "login")}
           disabled={loading}
-          className="text-lg font-semibold text-[#1D1D1D]"
+          className="font-medium text-foreground underline-offset-4 hover:underline"
         >
-          <GreenBgTitle
-            title={isLogin ? "Бүртгүүлэх" : "Нэвтрэх"}
-            className="text-2xl font-black italic"
-          />
+          {isLogin ? "Create one" : "Sign in"}
         </button>
-        <p className="text-lg text-[#606060]">
-          {isLogin
-            ? "Шинэ хэрэглэгч бол эндээс эхлээрэй"
-            : "Бүртгэлтэй бол нэвтэрч орно уу"}
-        </p>
-      </div>
+      </p>
     </section>
-  );
-};
-
-const LoginForm = ({ loading, onSubmit }) => {
-  const [form, setForm] = useState({
-    email: "",
-    password: "",
-  });
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    await onSubmit(form);
-  };
-
-  return (
-    <form className="space-y-5" onSubmit={handleSubmit}>
-      <Field
-        label="Цахим шуудан/ Утасны дугаар"
-        icon={<Mail className="size-5 text-[#6E6E6E]" />}
-      >
-        <Input
-          type="email"
-          placeholder="newuser@email.com"
-          value={form.email}
-          onChange={(event) =>
-            setForm((current) => ({ ...current, email: event.target.value }))
-          }
-          className="h-[60px] rounded-full border-0 bg-[#D9D9D9] px-6 text-base shadow-none placeholder:text-[#7F7F7F] focus-visible:ring-2 focus-visible:ring-[#8AFF53]/40"
-        />
-      </Field>
-
-      <Field
-        label="Нууц үг"
-        icon={<Lock className="size-5 text-[#6E6E6E]" />}
-      >
-        <Input
-          type="password"
-          placeholder="****************"
-          value={form.password}
-          onChange={(event) =>
-            setForm((current) => ({ ...current, password: event.target.value }))
-          }
-          className="h-[60px] rounded-full border-0 bg-[#D9D9D9] px-6 text-base shadow-none placeholder:text-[#7F7F7F] focus-visible:ring-2 focus-visible:ring-[#8AFF53]/40"
-        />
-      </Field>
-
-      <div className="flex items-center justify-between gap-4 text-sm text-[#5D5D5D]">
-        <label className="flex items-center gap-2">
-          <Checkbox defaultChecked className="border-[#8AFF53] data-checked:bg-[#8AFF53] data-checked:text-black" />
-          <span>Намайг сана</span>
-        </label>
-        <button type="button" className="hover:underline">
-          Нууц үг мартсан?
-        </button>
-      </div>
-
-      <Button
-        type="submit"
-        disabled={loading}
-        className="h-14 w-full rounded-full bg-[#1E1E1E] text-base font-semibold text-white hover:bg-[#2A2A2A]"
-      >
-        {loading ? "Нэвтэрч байна..." : "Нэвтрэх"}
-      </Button>
-    </form>
-  );
-};
-
-const RegisterForm = ({ loading, onSubmit }) => {
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    password: "",
-  });
-  const [acceptedTerms, setAcceptedTerms] = useState(false);
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-
-    if (!acceptedTerms) {
-      toast("Please accept the terms to continue");
-      return;
-    }
-
-    await onSubmit(form);
-  };
-
-  return (
-    <form className="space-y-5" onSubmit={handleSubmit}>
-      <Field
-        label="Нэр"
-        icon={<User2 className="size-5 text-[#6E6E6E]" />}
-      >
-        <Input
-          placeholder="Таны нэр"
-          value={form.name}
-          onChange={(event) =>
-            setForm((current) => ({ ...current, name: event.target.value }))
-          }
-          className="h-[60px] rounded-full border-0 bg-[#D9D9D9] px-6 text-base shadow-none placeholder:text-[#7F7F7F] focus-visible:ring-2 focus-visible:ring-[#8AFF53]/40"
-        />
-      </Field>
-
-      <Field
-        label="Цахим шуудан"
-        icon={<Mail className="size-5 text-[#6E6E6E]" />}
-      >
-        <Input
-          type="email"
-          placeholder="name@email.com"
-          value={form.email}
-          onChange={(event) =>
-            setForm((current) => ({ ...current, email: event.target.value }))
-          }
-          className="h-[60px] rounded-full border-0 bg-[#D9D9D9] px-6 text-base shadow-none placeholder:text-[#7F7F7F] focus-visible:ring-2 focus-visible:ring-[#8AFF53]/40"
-        />
-      </Field>
-
-      <Field
-        label="Нууц үг"
-        icon={<Lock className="size-5 text-[#6E6E6E]" />}
-      >
-        <Input
-          type="password"
-          placeholder="Шинэ нууц үг"
-          value={form.password}
-          onChange={(event) =>
-            setForm((current) => ({ ...current, password: event.target.value }))
-          }
-          className="h-[60px] rounded-full border-0 bg-[#D9D9D9] px-6 text-base shadow-none placeholder:text-[#7F7F7F] focus-visible:ring-2 focus-visible:ring-[#8AFF53]/40"
-        />
-      </Field>
-
-      <label className="flex items-start gap-3 rounded-3xl bg-[#F3F3F3] px-5 py-4 text-sm text-[#5D5D5D]">
-        <Checkbox
-          checked={acceptedTerms}
-          onCheckedChange={(value) => setAcceptedTerms(Boolean(value))}
-          className="mt-0.5 border-[#8AFF53] data-checked:bg-[#8AFF53] data-checked:text-black"
-        />
-        <span>Үйлчилгээний нөхцөл болон нууцлалын бодлогыг зөвшөөрч байна.</span>
-      </label>
-
-      <Button
-        type="submit"
-        disabled={loading}
-        className="h-14 w-full rounded-full bg-[#1E1E1E] text-base font-semibold text-white hover:bg-[#2A2A2A]"
-      >
-        <Check className="size-5" />
-        {loading ? "Бүртгэж байна..." : "Бүртгэл үүсгэх"}
-      </Button>
-    </form>
   );
 };
 
 const Field = ({ label, icon, children }) => {
   return (
-    <label className="flex flex-col gap-2">
-      <span className="text-lg font-medium text-[#3F3F3F]">{label}</span>
+    <label className="block space-y-2">
+      <span className="text-sm font-medium">{label}</span>
       <div className="relative">
-        <div className="pointer-events-none absolute inset-y-0 left-5 flex items-center">
+        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-muted-foreground">
           {icon}
-        </div>
-        <div className="[&_input]:pl-14">{children}</div>
+        </span>
+        <div className="[&_input]:pl-9">{children}</div>
       </div>
     </label>
   );

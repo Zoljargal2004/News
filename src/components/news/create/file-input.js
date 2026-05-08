@@ -1,6 +1,6 @@
 "use client";
 
-import { ImagePlus } from "lucide-react";
+import { Bookmark, ImagePlus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useEditNews } from "@/hooks/provider-news-editor";
 
@@ -37,7 +37,7 @@ export const FileInput = () => {
   };
 
   return (
-    <div className="mt-8">
+    <div>
       <input
         ref={inputRef}
         type="file"
@@ -48,9 +48,9 @@ export const FileInput = () => {
       <button
         type="button"
         onClick={openPicker}
-        className="group flex w-full overflow-hidden rounded-[26px] border border-black/10 bg-white text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+        className="group relative flex w-full overflow-hidden rounded-3xl bg-[#d9d9d9] text-left transition hover:bg-[#d0d0d0]"
       >
-        <div className="flex h-[470px] w-full items-center justify-center bg-[linear-gradient(135deg,#f8f8f8_0%,#e9e9e9_100%)]">
+        <div className="flex aspect-[16/9] w-full items-center justify-center">
           {previewUrl ? (
             <img
               src={previewUrl}
@@ -58,18 +58,18 @@ export const FileInput = () => {
               className="h-full w-full object-cover"
             />
           ) : (
-            <div className="flex flex-col items-center gap-4 text-black/45">
-              <div className="rounded-full bg-[var(--secondary-background)] p-6">
-                <ImagePlus size={72} />
-              </div>
-              <div className="text-center">
-                <p className="text-base font-semibold text-black">Upload thumbnail</p>
-                <p className="text-sm">Click here to choose an image</p>
-              </div>
+            <div className="flex size-20 items-center justify-center rounded-lg bg-black/55 text-white">
+              <ImagePlus className="size-10" />
             </div>
           )}
         </div>
+        <span className="absolute bottom-3 right-3 inline-flex size-8 items-center justify-center rounded-full bg-white text-black shadow-sm">
+          <Bookmark className="size-4 fill-black" />
+        </span>
       </button>
+      <p className="mt-2 text-right text-xs text-black/30">
+        Эх сурвалж оруулна уу.
+      </p>
     </div>
   );
 };
