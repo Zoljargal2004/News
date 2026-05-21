@@ -101,11 +101,13 @@ export const Header = ({ user }) => {
             setSearchText={setSearchText}
             onSubmit={handleSearchSubmit}
           />
-          <img
-            src={`https://i.pravatar.cc/80?u=${encodeURIComponent(user?.email || "reader")}`}
-            alt=""
-            className="size-10 rounded-full object-cover"
-          />
+          <Link href="/user" aria-label="Open profile">
+            <img
+              src={`https://i.pravatar.cc/80?u=${encodeURIComponent(user?.email || "reader")}`}
+              alt=""
+              className="size-10 rounded-full object-cover transition hover:ring-2 hover:ring-[var(--additional-accent)]"
+            />
+          </Link>
           <button
             type="button"
             aria-label="Log out"
@@ -140,6 +142,7 @@ export const Header = ({ user }) => {
                 {item.label}
               </Link>
             ))}
+            <Link href="/user">Profile</Link>
             {user?.role === "admin" ? <Link href="/news/create">Нийтлэх</Link> : null}
           </nav>
         </div>
