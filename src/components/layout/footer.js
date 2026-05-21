@@ -1,4 +1,6 @@
 import { GreenBgTitle } from "@/components/general/title";
+import Link from "next/link";
+
 
 export const Footer = () => {
   return (
@@ -22,10 +24,10 @@ export const Footer = () => {
         <div className="space-y-5">
           <GreenBgTitle title="Бусад медиа" className="text-2xl" />
           <div className="space-y-3 text-sm text-white/75">
-            <p>facebook.com/newslettermn</p>
-            <p>instagram.com/newslettermn</p>
-            <p>x.com/newslettermn</p>
-            <p>youtube.com/newslettermn</p>
+            <Link href="https://www.instagram.com/" className="block hover:text-white transition">Facebook</Link>
+            <Link href="https://www.instagram.com/" className="block hover:text-white transition">Instagram</Link>
+            <Link href="https://www.x.com/" className="block hover:text-white transition">X</Link>
+            <Link href="https://www.Youtube.com/" className="block hover:text-white transition">Youtube</Link>
           </div>
         </div>
 
