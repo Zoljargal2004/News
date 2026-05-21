@@ -1,0 +1,39 @@
+{
+  "history": {
+    "title": "Бидний түүх",
+    "body": "Newsletter.mn -ий хамт олон бид 2026 оны хаврын улирлын Веб Апп гэдэг хичээлийн бие даалт болгож энэхүү сайтыг хөгжүүлсэн байгаа ба бид тийм мундаг түүх одоохондоо бүтээж чадаагүй байгаа."
+  },
+  "objective": {
+    "title": "Бидний зорилго",
+    "body": "Newsletter.mn нь аливаа мэдээг ямар нэгэн нам болоод хэн нэгэн хүний нөлөөгүй, элдэв талыг баримтлахгүйгээр, үнэн бодит байдлыг байгаагаар нь "
+  },
+  "team": [
+    {
+      "name": "Zoljargal",
+      "role": "Main Developer",
+      "email": "zoljargal@newsletter.mn",
+      "phone": "+976 9999 0000",
+      "image": "team/palceholder.png"
+    },
+    {
+      "name": "Danzandorj",
+      "role": "Assistant developer",
+      "email": "danzandorj@newsletter.mn",
+      "phone": "+976 9900 0000",
+      "image": "/team/palceholder.png"
+    },
+    {
+      "name": "Bilguun-Erdene",
+      "role": "Assistant developer",
+      "email": "bilguunerdene@newsletter.mn",
+      "phone": "+976 9900 0000",
+      "image": "/team/palceholder.png"
+    }
+  ],
+  "contact": {
+    "email": "newsletter@newsletter.mn",
+    "phone": "+976 9900 0000",
+    "address": "Sukhbaatar District, Ulaanbaatar, Mongolia",
+    "location": "Ulaanbaatar, Mongolia"
+  }
+}
