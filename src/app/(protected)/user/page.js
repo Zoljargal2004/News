@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { Bookmark } from "lucide-react";
 import { GreenBgTitle } from "@/components/general/title";
+import { VIEWED_NEWS_STORAGE_KEY } from "@/components/news/read/viewed-news-recorder";
 import { useCurrentUser } from "@/hooks/use-news";
 import {
   profileMenuItems,
@@ -13,11 +15,25 @@ import {
 
 export default function User() {
   const { user } = useCurrentUser();
+  const [viewedNews, setViewedNews] = useState([]);
   const displayUser = {
     ...profileUser,
     name: user?.name || profileUser.name,
     email: user?.email || profileUser.email,
   };
+  const latestViewedNews = viewedNews.length ? viewedNews : readingHistory;
+
+  useEffect(() => {
+    try {
+      const storedItems = JSON.parse(
+        localStorage.getItem(VIEWED_NEWS_STORAGE_KEY) || "[]",
+      );
+
+      setViewedNews(Array.isArray(storedItems) ? storedItems : []);
+    } catch {
+      setViewedNews([]);
+    }
+  }, []);
 
   return (
     <div className="grid gap-8 lg:grid-cols-[180px_1fr] lg:items-start">
@@ -26,7 +42,10 @@ export default function User() {
       <section className="min-w-0 space-y-8">
         <ProfileHeader user={displayUser} />
         <NewsShelf title="Хадгалсан мэдээ" items={savedNews} />
-        <NewsShelf title="Уншсан түүх" items={readingHistory} />
+        <NewsShelf
+          title="Сүүлд уншсан"
+          items={latestViewedNews}
+        />
       </section>
     </div>
   );
@@ -76,10 +95,15 @@ const ProfileHeader = ({ user }) => {
   );
 };
 
-const NewsShelf = ({ title, items }) => {
+const NewsShelf = ({ title, items, helper }) => {
   return (
     <section className="space-y-4">
-      <GreenBgTitle title={title} className="text-3xl font-black italic" />
+      <div className="flex flex-wrap items-end gap-3">
+        <GreenBgTitle title={title} className="text-3xl font-black italic" />
+        {helper ? (
+          <span className="pb-1 text-xs text-black/45">{helper}</span>
+        ) : null}
+      </div>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         {items.map((item) => (
           <ProfileNewsCard key={item.id} item={item} />

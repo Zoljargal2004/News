@@ -1,6 +1,7 @@
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { CommentsSection } from "@/components/news/read/comments-section";
+import { ViewedNewsRecorder } from "@/components/news/read/viewed-news-recorder";
 
 const getBaseUrl = async () => {
   const headerStore = await headers();
@@ -38,6 +39,8 @@ export default async function Page({ params }) {
 
   return (
     <article className="mx-auto max-w-3xl space-y-8">
+      <ViewedNewsRecorder news={news} />
+
       <div className="overflow-hidden rounded-lg bg-muted">
         <img
           src={news?.thumbnail || "/newpapers.png"}
