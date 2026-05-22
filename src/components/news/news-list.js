@@ -2,7 +2,7 @@
 
 import { News1 } from "@/components/general/news-items";
 
-export const NewsList = ({ news = [], emptyText = "No news found." }) => {
+export const NewsList = ({ news = [], emptyText = "Мэдээ олдсонгүй." }) => {
   if (!news.length) {
     return <p className="text-sm text-muted-foreground">{emptyText}</p>;
   }

@@ -10,21 +10,21 @@
   "team": [
     {
       "name": "Zoljargal",
-      "role": "Main Developer",
+      "role": "Ахлах хөгжүүлэгч",
       "email": "zoljargal@newsletter.mn",
       "phone": "+976 9999 0000",
       "image": "team/palceholder.png"
     },
     {
       "name": "Danzandorj",
-      "role": "Assistant developer",
+      "role": "Туслах хөгжүүлэгч",
       "email": "danzandorj@newsletter.mn",
       "phone": "+976 9900 0000",
       "image": "/team/palceholder.png"
     },
     {
       "name": "Bilguun-Erdene",
-      "role": "Assistant developer",
+      "role": "Туслах хөгжүүлэгч",
       "email": "bilguunerdene@newsletter.mn",
       "phone": "+976 9900 0000",
       "image": "/team/palceholder.png"
@@ -33,7 +33,7 @@
   "contact": {
     "email": "newsletter@newsletter.mn",
     "phone": "+976 9900 0000",
-    "address": "Sukhbaatar District, Ulaanbaatar, Mongolia",
-    "location": "Ulaanbaatar, Mongolia"
+    "address": "Сүхбаатар дүүрэг, Улаанбаатар, Монгол",
+    "location": "Улаанбаатар, Монгол"
   }
 }

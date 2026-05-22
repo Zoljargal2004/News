@@ -43,14 +43,14 @@ export const Auth = () => {
       const payload = await res.json();
 
       if (!res.ok || !payload?.success) {
-        throw new Error(payload?.error || "Authentication failed");
+        throw new Error(payload?.error || "Нэвтрэлт амжилтгүй боллоо");
       }
 
-      toast(isLogin ? "Signed in" : "Account created");
+      toast(isLogin ? "Нэвтэрлээ" : "Бүртгэл үүсгэлээ");
       router.push("/");
       router.refresh();
     } catch (error) {
-      toast(error.message || "Authentication failed");
+      toast(error.message || "Нэвтрэлт амжилтгүй боллоо");
     } finally {
       setLoading(false);
     }
@@ -61,29 +61,29 @@ export const Auth = () => {
       <header className="space-y-2">
         <p className="text-sm text-muted-foreground">Newsletter.mn</p>
         <h1 className="text-3xl font-semibold tracking-tight">
-          {isLogin ? "Welcome back" : "Create an account"}
+          {isLogin ? "Тавтай морил" : "Бүртгэл үүсгэх"}
         </h1>
         <p className="text-sm text-muted-foreground">
           {isLogin
-            ? "Sign in to read, comment, and manage news."
-            : "Register to start reading and commenting."}
+            ? "Мэдээ унших, сэтгэгдэл бичих, мэдээгээ удирдахын тулд нэвтэрнэ үү."
+            : "Мэдээ уншиж, сэтгэгдэл бичиж эхлэхийн тулд бүртгүүлнэ үү."}
         </p>
       </header>
 
       <form className="space-y-4" onSubmit={handleSubmit}>
         {!isLogin ? (
-          <Field label="Name" icon={<User2 className="size-4" />}>
+          <Field label="Нэр" icon={<User2 className="size-4" />}>
             <Input
               value={form.name}
               onChange={(event) => updateField("name", event.target.value)}
-              placeholder="Your name"
+              placeholder="Таны нэр"
               autoComplete="name"
               required
             />
           </Field>
         ) : null}
 
-        <Field label="Email" icon={<Mail className="size-4" />}>
+        <Field label="Имэйл" icon={<Mail className="size-4" />}>
           <Input
             type="email"
             value={form.email}
@@ -94,12 +94,12 @@ export const Auth = () => {
           />
         </Field>
 
-        <Field label="Password" icon={<Lock className="size-4" />}>
+        <Field label="Нууц үг" icon={<Lock className="size-4" />}>
           <Input
             type="password"
             value={form.password}
             onChange={(event) => updateField("password", event.target.value)}
-            placeholder="Password"
+            placeholder="Нууц үг"
             autoComplete={isLogin ? "current-password" : "new-password"}
             required
             minLength={6}
@@ -107,19 +107,19 @@ export const Auth = () => {
         </Field>
 
         <Button type="submit" className="h-10 w-full" disabled={loading}>
-          {loading ? "Please wait..." : isLogin ? "Sign in" : "Create account"}
+          {loading ? "Түр хүлээнэ үү..." : isLogin ? "Нэвтрэх" : "Бүртгэл үүсгэх"}
         </Button>
       </form>
 
       <p className="text-sm text-muted-foreground">
-        {isLogin ? "No account?" : "Already registered?"}{" "}
+        {isLogin ? "Бүртгэлгүй юу?" : "Бүртгэлтэй юу?"}{" "}
         <button
           type="button"
           onClick={() => setMode(isLogin ? "register" : "login")}
           disabled={loading}
           className="font-medium text-foreground underline-offset-4 hover:underline"
         >
-          {isLogin ? "Create one" : "Sign in"}
+          {isLogin ? "Бүртгүүлэх" : "Нэвтрэх"}
         </button>
       </p>
     </section>

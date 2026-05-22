@@ -27,7 +27,7 @@ const getNewsById = async (id) => {
   const payload = await res.json();
 
   if (!res.ok || !payload?.success) {
-    throw new Error(payload?.error || "Failed to fetch news");
+    throw new Error(payload?.error || "Мэдээ татахад алдаа гарлаа");
   }
 
   return payload.data;
@@ -44,7 +44,7 @@ export default async function Page({ params }) {
       <div className="overflow-hidden rounded-lg bg-muted">
         <img
           src={news?.thumbnail || "/newpapers.png"}
-          alt={news?.title || "thumbnail"}
+          alt={news?.title || "зураг"}
           className="aspect-video w-full object-cover"
         />
       </div>
@@ -54,9 +54,9 @@ export default async function Page({ params }) {
           {news?.title}
         </h1>
         <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
-          {news?.author_name ? <span>By {news.author_name}</span> : null}
+          {news?.author_name ? <span>Нийтэлсэн: {news.author_name}</span> : null}
           {news?.political_party ? (
-            <span>Related party: {news.political_party}</span>
+            <span>Холбогдох нам: {news.political_party}</span>
           ) : null}
         </div>
       </header>

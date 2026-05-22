@@ -4,12 +4,12 @@ import { Toaster } from "sonner";
 
 export const metadata = {
   title: "Newsletter.mn",
-  description: "A minimal news app",
+  description: "Монгол мэдээний апп",
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="mn">
       <body className="min-h-screen antialiased">
         {children}
         <Toaster />

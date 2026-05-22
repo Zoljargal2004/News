@@ -6,7 +6,7 @@ export default function AboutPage() {
       <header className="space-y-3">
         <h1 className="text-4xl font-semibold">Бидний тухай</h1>
         <p className="max-w-3xl text-muted-foreground">
-          Learn more about our newsroom, our mission, and the people behind our reporting.
+          Манай редакц, эрхэм зорилго болон мэдээ бэлтгэдэг багийн талаар илүү ихийг мэдээрэй.
         </p>
       </header>
 
@@ -51,10 +51,10 @@ export default function AboutPage() {
       <section className="space-y-3">
         <h2 className="text-2xl font-semibold">Холбоо барих</h2>
         <div className="text-muted-foreground">
-          <p>Email: {about.contact.email}</p>
-          <p>Phone: {about.contact.phone}</p>
-          <p>Address: {about.contact.address}</p>
-          <p>Location: {about.contact.location}</p>
+          <p>Имэйл: {about.contact.email}</p>
+          <p>Утас: {about.contact.phone}</p>
+          <p>Хаяг: {about.contact.address}</p>
+          <p>Байршил: {about.contact.location}</p>
         </div>
       </section>
     </section>

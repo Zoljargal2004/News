@@ -7,7 +7,7 @@ import { useEffect, useRef } from "react";
 
 const QuillEditor = dynamic(() => import("react-quill-new"), {
   ssr: false,
-  loading: () => <p>Loading editor...</p>,
+  loading: () => <p>Редактор ачааллаж байна...</p>,
 });
 
 export const NewsEdit = () => {
@@ -109,7 +109,7 @@ const NewsImageInput = ({ image, onChange }) => {
           {image?.src ? (
             <img
               src={image.src}
-              alt="Selected content preview"
+              alt="Сонгосон агуулгын зураг"
               className="h-full w-full object-cover"
             />
           ) : (
@@ -117,9 +117,9 @@ const NewsImageInput = ({ image, onChange }) => {
               <ImagePlus className="size-10" />
               <div className="text-center">
                 <p className="text-sm font-medium text-foreground">
-                  Upload image
+                  Зураг оруулах
                 </p>
-                <p className="text-xs">Click to choose an image</p>
+                <p className="text-xs">Зураг сонгохын тулд дарна уу</p>
               </div>
             </div>
           )}

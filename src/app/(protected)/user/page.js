@@ -31,7 +31,7 @@ export default function User() {
   const authorMode = user?.role === "admin";
   const displayUser = {
     ...(profileData || {}),
-    name: user?.name || profileData?.name || "Reader",
+    name: user?.name || profileData?.name || "Уншигч",
     email: user?.email || profileData?.email || "",
     authorMode,
   };
@@ -85,7 +85,7 @@ export default function User() {
   }, []);
 
   if (loading) {
-    return <p className="text-sm text-black/45">Loading profile...</p>;
+    return <p className="text-sm text-black/45">Профайл ачааллаж байна...</p>;
   }
 
   return (
@@ -102,7 +102,7 @@ export default function User() {
               items={publishedItems}
               showCreateCard
             />
-            <NewsShelf title="Drafted" items={draftItems} />
+            <NewsShelf title="Ноорог мэдээ" items={draftItems} />
           </>
         ) : (
           <NewsShelf title="Сүүлд уншсан" items={latestViewedNews} />
@@ -136,7 +136,7 @@ const ProfileHeader = ({ user }) => {
       <div className="flex items-center gap-4">
         <img
           src={user.avatar}
-          alt={`${user.name} profile`}
+          alt={`${user.name} профайл зураг`}
           className="size-20 rounded-full border-4 border-white object-cover shadow-sm"
         />
         <div>
@@ -155,7 +155,7 @@ const ProfileHeader = ({ user }) => {
       </div>
 
       <div className="rounded-2xl bg-white px-4 py-3 text-sm font-semibold shadow-sm">
-        Author mode: {user.authorMode ? "on" : "off"}
+        Зохиогчийн горим: {user.authorMode ? "асаалттай" : "унтраалттай"}
       </div>
     </div>
   );
@@ -173,7 +173,7 @@ const NewsShelf = ({ title, items, showCreateCard = false }) => {
           ))}
         </div>
       ) : (
-        <p className="text-sm text-black/45">No profile news yet.</p>
+        <p className="text-sm text-black/45">Одоогоор профайлын мэдээ алга.</p>
       )}
     </section>
   );
@@ -191,7 +191,7 @@ const CreateNewsCard = () => {
         </span>
         <span className="px-4 text-xs font-semibold">Шинээр нийтлэл бичих</span>
       </Link>
-      <p className="mt-2 text-[0.65rem] text-black/35">Create news</p>
+      <p className="mt-2 text-[0.65rem] text-black/35">Мэдээ үүсгэх</p>
     </article>
   );
 };
@@ -216,7 +216,7 @@ const ProfileNewsCard = ({ item }) => {
         <Link href={`/news/read/${item.id}`}>{item.title}</Link>
       </h2>
       <p className="mt-2 text-[0.65rem] text-black/35">
-        {item.date} | Author: {item.author}
+        {item.date} | Зохиогч: {item.author}
       </p>
     </article>
   );

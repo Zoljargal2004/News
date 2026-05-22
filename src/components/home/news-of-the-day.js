@@ -22,7 +22,7 @@ export const TodaysNews = () => {
   });
 
   if (loading) {
-    return <p className="text-sm text-black/45">Loading news...</p>;
+    return <p className="text-sm text-black/45">Мэдээ ачааллаж байна...</p>;
   }
 
   const today = news.slice(0, 4);
@@ -35,7 +35,7 @@ export const TodaysNews = () => {
       />
 
       {!news.length ? (
-        <p className="text-sm text-black/45">No news found for this filter.</p>
+        <p className="text-sm text-black/45">Энэ шүүлтүүрт тохирох мэдээ олдсонгүй.</p>
       ) : null}
 
       {news.length ? (
@@ -96,7 +96,7 @@ export const TodaysNews = () => {
 
 const PartyFilter = ({ selectedParty, setSelectedParty }) => {
   const filterItems = [
-    { id: "all", label: "Бүх мэдээ", shortLabel: "All", color: "#111111" },
+    { id: "all", label: "Бүх мэдээ", shortLabel: "Бүгд", color: "#111111" },
     ...politicalParties,
   ];
 
@@ -179,8 +179,8 @@ const Meta = ({ item }) => {
       {item.created_at ? (
         <span>{new Date(item.created_at).toLocaleDateString()}</span>
       ) : null}
-      {item.author_name ? <span>Author: {item.author_name}</span> : null}
-      <span>2 min read</span>
+      {item.author_name ? <span>Зохиогч: {item.author_name}</span> : null}
+      <span>2 мин унших</span>
     </div>
   );
 };

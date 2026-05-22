@@ -15,7 +15,7 @@ export default async function Page() {
         <section className="relative hidden overflow-hidden border-r lg:block">
           <img
             src="/newpapers.png"
-            alt="Stack of newspapers"
+            alt="Сонины багц"
             className="absolute inset-0 h-full w-full object-cover"
           />
         </section>

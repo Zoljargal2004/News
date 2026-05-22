@@ -42,7 +42,7 @@ export const useGetOneNews = () => {
       const res = await APIHandler(`/api/news/read/${id}`, "GET");
 
       if (!res.success) {
-        throw new Error("Failed to fetch news");
+        throw new Error("Мэдээ татахад алдаа гарлаа");
       } else {
         return res.data;
       }
@@ -109,7 +109,7 @@ export const useNews = () => {
     const res = await APIHandler("/api/general/image", "POST", form);
 
     if (!res?.success) {
-      throw new Error(res?.error || "Image upload failed");
+      throw new Error(res?.error || "Зураг байршуулахад алдаа гарлаа");
     }
 
     return res.data?.url || res.data?.data?.url || null;
@@ -147,13 +147,13 @@ export const useNews = () => {
       });
 
       if (!res?.success) {
-        throw new Error(res?.error || "Failed to create news");
+        throw new Error(res?.error || "Мэдээ үүсгэхэд алдаа гарлаа");
       }
 
-      toast("News created successfully");
+      toast("Мэдээ амжилттай үүслээ");
       return res;
     } catch (error) {
-      toast(error.message || "Failed to create news");
+      toast(error.message || "Мэдээ үүсгэхэд алдаа гарлаа");
       return { success: false, error: error.message };
     } finally {
       setLoading(false);

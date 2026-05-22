@@ -16,7 +16,7 @@ export const NewsCard = ({ data, variant = "default" }) => {
       >
         <img
           src={data?.thumbnail || "/newpapers.png"}
-          alt={data?.title || "News thumbnail"}
+          alt={data?.title || "Мэдээний зураг"}
           className={`${large ? "aspect-[16/9]" : "aspect-[4/3]"} w-full object-cover transition duration-300 group-hover:scale-[1.03]`}
         />
         <span className="absolute bottom-2 right-2 inline-flex size-7 items-center justify-center rounded-full bg-white text-black shadow-sm">
@@ -35,7 +35,7 @@ export const NewsCard = ({ data, variant = "default" }) => {
           ) : null}
           {data.author_name ? <span>{data.author_name}</span> : null}
           {data.created_at ? (
-            <span>{large ? "2 min read" : "1 min read"}</span>
+            <span>{large ? "2 мин унших" : "1 мин унших"}</span>
           ) : null}
         </div>
         <PartyScoreBar scores={data.party_scores} />

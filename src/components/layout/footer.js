@@ -32,19 +32,19 @@ export const Footer = () => {
         </div>
 
         <div className="space-y-5">
-          <GreenBgTitle title="Something" className="text-2xl" />
+          <GreenBgTitle title="Бусад" className="text-2xl" />
           <div className="space-y-3 text-sm text-white/75">
-            <p>Something</p>
-            <p>Other thing</p>
-            <p>the other thing</p>
-            <p>Anything haha</p>
+            <p>Мэдээлэл</p>
+            <p>Үйлчилгээний нөхцөл</p>
+            <p>Нууцлалын бодлого</p>
+            <p>Тусламж</p>
           </div>
         </div>
       </div>
 
       <div className="mx-auto max-w-6xl px-6 pb-10 text-center text-xs text-white/65">
         <p>
-          © 2026 Newsletter.mn. All Rights Reserved.
+          © 2026 Newsletter.mn. Бүх эрх хуулиар хамгаалагдсан.
         </p>
       </div>
     </footer>

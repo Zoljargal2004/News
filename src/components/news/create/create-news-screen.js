@@ -34,9 +34,9 @@ export const CreateNewsScreen = () => {
               alt=""
               className="mx-auto size-12 rounded-full object-cover"
             />
-            <p>By: {user?.name || "Newsletter.mn"}</p>
+            <p>Нийтэлсэн: {user?.name || "Newsletter.mn"}</p>
             <p className="text-xs text-black/35">
-              {new Date().toLocaleDateString()} | 1,212,921 read | 12min read
+              {new Date().toLocaleDateString()} | 1,212,921 уншсан | 12 мин унших
             </p>
           </div>
 

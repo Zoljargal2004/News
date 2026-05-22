@@ -56,14 +56,14 @@ export const Header = ({ user }) => {
       const payload = await res.json();
 
       if (!res.ok || !payload?.success) {
-        throw new Error(payload?.error || "Failed to sign out");
+        throw new Error(payload?.error || "Гарахад алдаа гарлаа");
       }
 
-      toast("Signed out");
+      toast("Системээс гарлаа");
       router.push("/auth");
       router.refresh();
     } catch (error) {
-      toast(error.message || "Failed to sign out");
+      toast(error.message || "Гарахад алдаа гарлаа");
     } finally {
       setLoggingOut(false);
     }
@@ -101,7 +101,7 @@ export const Header = ({ user }) => {
             setSearchText={setSearchText}
             onSubmit={handleSearchSubmit}
           />
-          <Link href="/user" aria-label="Open profile">
+          <Link href="/user" aria-label="Профайл нээх">
             <img
               src={`https://i.pravatar.cc/80?u=${encodeURIComponent(user?.email || "reader")}`}
               alt=""
@@ -110,7 +110,7 @@ export const Header = ({ user }) => {
           </Link>
           <button
             type="button"
-            aria-label="Log out"
+            aria-label="Гарах"
             onClick={handleLogout}
             disabled={loggingOut}
             className="inline-flex size-8 items-center justify-center rounded-full bg-white text-black/65 shadow-sm transition hover:text-black disabled:opacity-50"
@@ -121,7 +121,7 @@ export const Header = ({ user }) => {
 
         <button
           type="button"
-          aria-label="Toggle menu"
+          aria-label="Цэс нээх, хаах"
           onClick={() => setMenuOpen((value) => !value)}
           className="inline-flex size-10 items-center justify-center rounded-full bg-white shadow-sm lg:hidden"
         >
@@ -142,7 +142,7 @@ export const Header = ({ user }) => {
                 {item.label}
               </Link>
             ))}
-            <Link href="/user">Profile</Link>
+            <Link href="/user">Профайл</Link>
             {user?.role === "admin" ? <Link href="/news/create">Нийтлэх</Link> : null}
           </nav>
         </div>

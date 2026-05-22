@@ -11,7 +11,7 @@ const formatDate = (value) => {
     return "";
   }
 
-  return new Intl.DateTimeFormat("en-US", {
+  return new Intl.DateTimeFormat("mn-MN", {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(value));
@@ -35,12 +35,12 @@ export const CommentsSection = ({ newsId }) => {
         const payload = await res.json();
 
         if (!res.ok || !payload?.success) {
-          throw new Error(payload?.error || "Failed to fetch comments");
+          throw new Error(payload?.error || "Сэтгэгдэл татахад алдаа гарлаа");
         }
 
         setComments(Array.isArray(payload.data) ? payload.data : []);
       } catch (error) {
-        toast(error.message || "Failed to fetch comments");
+        toast(error.message || "Сэтгэгдэл татахад алдаа гарлаа");
       } finally {
         setLoading(false);
       }
@@ -51,7 +51,7 @@ export const CommentsSection = ({ newsId }) => {
 
   const handleSubmit = async () => {
     if (!content.trim()) {
-      toast("Comment is required");
+      toast("Сэтгэгдэл оруулна уу");
       return;
     }
 
@@ -68,13 +68,13 @@ export const CommentsSection = ({ newsId }) => {
       const payload = await res.json();
 
       if (!res.ok || !payload?.success) {
-        throw new Error(payload?.error || "Failed to create comment");
+        throw new Error(payload?.error || "Сэтгэгдэл нийтлэхэд алдаа гарлаа");
       }
 
       setComments((current) => [payload.data, ...current]);
       setContent("");
     } catch (error) {
-      toast(error.message || "Failed to create comment");
+      toast(error.message || "Сэтгэгдэл нийтлэхэд алдаа гарлаа");
     } finally {
       setSubmitting(false);
     }
@@ -82,27 +82,27 @@ export const CommentsSection = ({ newsId }) => {
 
   return (
     <section className="border-t pt-8">
-      <h2 className="text-xl font-semibold">Comments</h2>
+      <h2 className="text-xl font-semibold">Сэтгэгдэл</h2>
 
       {user ? (
         <div className="mt-4 space-y-3">
           <Textarea
             value={content}
             onChange={(event) => setContent(event.target.value)}
-            placeholder="Write a comment"
+            placeholder="Сэтгэгдэл бичих"
           />
           <Button type="button" onClick={handleSubmit} disabled={submitting}>
-            {submitting ? "Posting..." : "Post comment"}
+            {submitting ? "Нийтэлж байна..." : "Сэтгэгдэл нийтлэх"}
           </Button>
         </div>
       ) : null}
 
       {loading ? (
-        <p className="mt-4 text-sm text-muted-foreground">Loading comments...</p>
+        <p className="mt-4 text-sm text-muted-foreground">Сэтгэгдэл ачааллаж байна...</p>
       ) : null}
 
       {!loading && comments.length === 0 ? (
-        <p className="mt-4 text-sm text-muted-foreground">No comments yet.</p>
+        <p className="mt-4 text-sm text-muted-foreground">Одоогоор сэтгэгдэл алга.</p>
       ) : null}
 
       <div className="mt-6 space-y-5">

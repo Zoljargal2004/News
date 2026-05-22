@@ -18,10 +18,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { GreenBgTitle } from "@/components/general/title";
+import { getCategoryDisplayName } from "@/lib/categories";
 
 const STATUS_OPTIONS = [
-  { value: "published", label: "Public" },
-  { value: "draft", label: "Draft" },
+  { value: "published", label: "Нийтэлсэн" },
+  { value: "draft", label: "Ноорог" },
 ];
 
 const getDominantParty = (partyScores) => {
@@ -97,13 +98,13 @@ export const PanelSidebar = () => {
   return (
     <section className="rounded-3xl bg-[#d9d9d9] p-6">
       <div className="space-y-6">
-        <PanelHeading title="Status & Visibility" />
+        <PanelHeading title="Төлөв ба харагдах байдал" />
 
         <div className="flex items-center justify-between gap-4">
-          <span className="text-sm">Visibility</span>
+          <span className="text-sm">Харагдах байдал</span>
           <Select value={status || "draft"} onValueChange={setStatus}>
             <SelectTrigger className="h-9 w-28 rounded-full border-black/70 bg-transparent">
-              <SelectValue placeholder="Public" />
+              <SelectValue placeholder="Нийтэлсэн" />
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
@@ -118,7 +119,7 @@ export const PanelSidebar = () => {
         </div>
 
         <label className="flex items-center justify-between gap-3 text-sm">
-          Recommended
+          Санал болгох
           <Checkbox
             checked={recommended}
             onCheckedChange={(checked) => setRecommended(Boolean(checked))}
@@ -126,19 +127,19 @@ export const PanelSidebar = () => {
         </label>
 
         <div className="space-y-2">
-          <p className="text-sm">Political party</p>
+          <p className="text-sm">Улс төрийн нам</p>
           <Input
             value={politicalParty}
             onChange={(event) => setPoliticalParty(event.target.value)}
-            placeholder="Optional"
+            placeholder="Заавал биш"
             className="h-9 rounded-full border-black/40 bg-transparent"
           />
         </div>
 
-        <PanelHeading title="Categories" />
+        <PanelHeading title="Ангилал" />
         <div className="grid grid-cols-2 gap-3">
           {categoriesLoading ? (
-            <p className="col-span-2 text-xs text-black/45">Loading...</p>
+            <p className="col-span-2 text-xs text-black/45">Ачааллаж байна...</p>
           ) : (
             availableCategories.map((categoryName) => {
               const active = categories.includes(categoryName);
@@ -152,18 +153,18 @@ export const PanelSidebar = () => {
                     active ? "bg-black text-white" : "bg-transparent text-black"
                   }`}
                 >
-                  {categoryName}
+                  {getCategoryDisplayName(categoryName)}
                 </button>
               );
             })
           )}
         </div>
 
-        <PanelHeading title="Sources" />
+        <PanelHeading title="Эх сурвалж" />
         <Textarea
           value={sources}
           onChange={(event) => setSources(event.target.value)}
-          placeholder="Upload sources..."
+          placeholder="Эх сурвалжаа оруулна уу..."
           className="min-h-28 resize-none rounded-xl border-black/70 bg-transparent text-xs"
         />
 
@@ -174,7 +175,7 @@ export const PanelSidebar = () => {
             disabled={uploadLoading || !title.trim() || news.length === 0}
             onClick={() => handleSubmit(true)}
           >
-            <GreenBgTitle title={uploadLoading ? "Publishing..." : "Publish"} />
+            <GreenBgTitle title={uploadLoading ? "Нийтэлж байна..." : "Нийтлэх"} />
           </Button>
           <button
             type="button"
@@ -182,7 +183,7 @@ export const PanelSidebar = () => {
             onClick={() => handleSubmit(false)}
             className="block w-full text-sm font-bold italic underline disabled:opacity-50"
           >
-            Save as Draft
+            Ноорог болгон хадгалах
           </button>
         </div>
       </div>
@@ -209,7 +210,7 @@ export const CoverageDetails = () => {
 
   return (
     <section className="rounded-3xl bg-[#d9d9d9] p-6">
-      <PanelHeading title="Coverage Details" />
+      <PanelHeading title="Хамаарлын мэдээлэл" />
       <div className="mt-4 space-y-2 text-sm">
         <div className="flex items-center justify-between gap-4">
           <span>Нийт оноо:</span>

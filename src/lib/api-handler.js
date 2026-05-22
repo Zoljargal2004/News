@@ -24,7 +24,7 @@ export const APIHandler = async (route, method = "GET", body, options = {}) => {
     const data = await res.json();
 
     if (!res.ok) {
-      throw new Error(data?.error || "Failed to fetch");
+      throw new Error(data?.error || "Хүсэлт амжилтгүй боллоо");
     }
 
     return data;

@@ -54,7 +54,7 @@ export const FileInput = () => {
           {previewUrl ? (
             <img
               src={previewUrl}
-              alt="Selected upload preview"
+              alt="Сонгосон нүүр зураг"
               className="h-full w-full object-cover"
             />
           ) : (

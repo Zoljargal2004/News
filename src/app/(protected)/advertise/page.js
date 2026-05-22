@@ -45,13 +45,13 @@ export default function AdvertisePage() {
       const payload = await res.json();
 
       if (!res.ok || !payload?.success) {
-        throw new Error(payload?.error || "Failed to submit request");
+        throw new Error(payload?.error || "Хүсэлт илгээхэд алдаа гарлаа");
       }
 
-      toast("Advertising request submitted");
+      toast("Сурталчилгааны хүсэлт илгээгдлээ");
       setForm(initialForm);
     } catch (error) {
-      toast(error.message || "Failed to submit request");
+      toast(error.message || "Хүсэлт илгээхэд алдаа гарлаа");
     } finally {
       setSubmitting(false);
     }
@@ -62,8 +62,8 @@ export default function AdvertisePage() {
       <header className="space-y-3">
         <GreenBgTitle title="Сурталчилгаа байрлуулах" className="text-4xl" />
         <p className="text-sm leading-6 text-muted-foreground">
-          Send us your advertising request. Our team will review your message
-          and contact you with placement options.
+          Сурталчилгааны хүсэлтээ бидэнд илгээнэ үү. Манай баг таны мэдээллийг
+          шалгаад байршуулах сонголтуудын талаар холбогдох болно.
         </p>
       </header>
 
@@ -72,13 +72,13 @@ export default function AdvertisePage() {
           <Input
             value={form.companyName}
             onChange={(event) => updateField("companyName", event.target.value)}
-            placeholder="Company name"
+            placeholder="Байгууллагын нэр"
             required
           />
           <Input
             value={form.contactName}
             onChange={(event) => updateField("contactName", event.target.value)}
-            placeholder="Contact name"
+            placeholder="Холбоо барих хүний нэр"
             required
           />
         </div>
@@ -88,13 +88,13 @@ export default function AdvertisePage() {
             type="email"
             value={form.email}
             onChange={(event) => updateField("email", event.target.value)}
-            placeholder="Email"
+            placeholder="Имэйл"
             required
           />
           <Input
             value={form.phone}
             onChange={(event) => updateField("phone", event.target.value)}
-            placeholder="Phone"
+            placeholder="Утас"
           />
         </div>
 
@@ -102,24 +102,24 @@ export default function AdvertisePage() {
           <Input
             value={form.placement}
             onChange={(event) => updateField("placement", event.target.value)}
-            placeholder="Placement"
+            placeholder="Байршил"
           />
           <Input
             value={form.budget}
             onChange={(event) => updateField("budget", event.target.value)}
-            placeholder="Budget"
+            placeholder="Төсөв"
           />
         </div>
 
         <Textarea
           value={form.message}
           onChange={(event) => updateField("message", event.target.value)}
-          placeholder="Tell us what kind of advertisement you want to place"
+          placeholder="Ямар төрлийн сурталчилгаа байршуулах хүсэлтэйгээ бичнэ үү"
           required
         />
 
         <Button type="submit" disabled={submitting}>
-          {submitting ? "Submitting..." : "Submit request"}
+          {submitting ? "Илгээж байна..." : "Хүсэлт илгээх"}
         </Button>
       </form>
     </section>

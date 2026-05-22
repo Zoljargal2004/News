@@ -20,14 +20,14 @@ export const PanelActions = () => {
   return (
     <div className="mx-auto grid max-w-3xl gap-3 sm:grid-cols-2">
       <Button className="h-10 rounded-full" onClick={addParagraphBlock}>
-        Text block
+        Текст блок
       </Button>
       <Button
         className="h-10 rounded-full"
         variant="outline"
         onClick={addImageBlock}
       >
-        Image block
+        Зураг блок
       </Button>
     </div>
   );
