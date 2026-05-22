@@ -102,6 +102,24 @@ const commentSchema = new Schema(
   },
 );
 
+const advertisingRequestSchema = new Schema(
+  {
+    company_name: { type: String, required: true, trim: true },
+    contact_name: { type: String, required: true, trim: true },
+    email: { type: String, required: true, trim: true, lowercase: true },
+    phone: { type: String, default: null, trim: true },
+    placement: { type: String, default: "homepage", trim: true },
+    budget: { type: String, default: null, trim: true },
+    message: { type: String, required: true, trim: true },
+    status: { type: String, required: true, default: "new" },
+    user_id: { type: Schema.Types.ObjectId, ref: "User", default: null },
+  },
+  {
+    ...baseSchemaOptions,
+    timestamps: { createdAt: "created_at", updatedAt: "updated_at" },
+  },
+);
+
 userSchema.index({ email: 1 }, { unique: true });
 sessionSchema.index({ token_hash: 1 }, { unique: true });
 categorySchema.index({ name: 1 }, { unique: true });
@@ -117,6 +135,10 @@ export const News = models.News || model("News", newsSchema);
 export const Comment = models.Comment || model("Comment", commentSchema);
 
 export const isObjectId = (value) => Types.ObjectId.isValid(String(value || ""));
+
+export const AdvertisingRequest =
+  models.AdvertisingRequest ||
+  model("AdvertisingRequest", advertisingRequestSchema);
 
 export const serializeUser = (user) => {
   if (!user) {
@@ -148,6 +170,7 @@ export const serializeNews = (news) => {
   if (!news) {
     return null;
   }
+  
 
   const author = news.author_id && news.author_id.name ? news.author_id : null;
   const categories = Array.isArray(news.categories) ? news.categories : [];
@@ -186,5 +209,26 @@ export const serializeComment = (comment) => {
     user_id: toId(comment.user_id),
     user_name: user?.name,
     user_role: user?.role,
+  };
+};
+
+export const serializeAdvertisingRequest = (request) => {
+  if (!request) {
+    return null;
+  }
+
+  return {
+    id: toId(request),
+    company_name: request.company_name,
+    contact_name: request.contact_name,
+    email: request.email,
+    phone: request.phone,
+    placement: request.placement,
+    budget: request.budget,
+    message: request.message,
+    status: request.status,
+    user_id: toId(request.user_id),
+    created_at: serializeDate(request.created_at),
+    updated_at: serializeDate(request.updated_at),
   };
 };

@@ -10,7 +10,7 @@ export const Footer = () => {
           <GreenBgTitle title="Newsletter.mn" className="text-2xl" />
           <div className="space-y-3 text-sm text-white/75">
             <Link href="/about" className="block transition hover:text-white">Бидний тухай</Link>
-            <p>Сурталчилгаа байрлуулах</p>
+            <Link href="/advertise">Сурталчилгаа байрлуулах</Link>
           </div>
           <div className="space-y-3">
             <GreenBgTitle title="Холбоо барих" className="text-xl" />
