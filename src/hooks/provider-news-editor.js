@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState } from "react";
+import { defaultPartyScores } from "@/data/political-parties";
 
 const NewsContext = createContext();
 
@@ -13,6 +14,7 @@ export function NewsProvider({ children }) {
   const [title, setTitle] = useState("");
   const [thumbnailImage, setThumbnailImage] = useState(null);
   const [politicalParty, setPoliticalParty] = useState("");
+  const [partyScores, setPartyScores] = useState(defaultPartyScores);
 
   const resetEditor = () => {
     setNews([]);
@@ -23,6 +25,7 @@ export function NewsProvider({ children }) {
     setTitle("");
     setThumbnailImage(null);
     setPoliticalParty("");
+    setPartyScores(defaultPartyScores);
   };
 
   return (
@@ -36,6 +39,7 @@ export function NewsProvider({ children }) {
         title,
         thumbnailImage,
         politicalParty,
+        partyScores,
         setNews,
         setThumbnail,
         setCategory: setCategories,
@@ -45,6 +49,7 @@ export function NewsProvider({ children }) {
         setTitle,
         setThumbnailImage,
         setPoliticalParty,
+        setPartyScores,
         resetEditor,
       }}
     >

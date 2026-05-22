@@ -91,3 +91,58 @@ export const readingHistory = [
     thumbnail: "/newpapers.png",
   },
 ];
+
+export const publishedNews = [
+  {
+    id: 11,
+    title: "City Council Approves New Public Transit Plan",
+    date: "2026.05.21",
+    author: "Admin Editor",
+    thumbnail: "/newpapers.png",
+  },
+  {
+    id: 12,
+    title: "Startups See Fresh Investment From Regional Funds",
+    date: "2026.05.20",
+    author: "Admin Editor",
+    thumbnail: "/newpapers.png",
+  },
+  {
+    id: 13,
+    title: "New Solar Project Expands Clean Power Capacity",
+    date: "2026.05.19",
+    author: "Admin Editor",
+    thumbnail: "/newpapers.png",
+  },
+  {
+    id: 14,
+    title: "Hospitals Launch Faster Appointment System",
+    date: "2026.05.18",
+    author: "Admin Editor",
+    thumbnail: "/newpapers.png",
+  },
+];
+
+export const draftNews = [
+  {
+    id: 15,
+    title: "Draft: University Opens Climate Research Center",
+    date: "2026.05.22",
+    author: "Admin Editor",
+    thumbnail: "/newpapers.png",
+  },
+  {
+    id: 16,
+    title: "Draft: Regional Leaders Meet For Trade Talks",
+    date: "2026.05.22",
+    author: "Admin Editor",
+    thumbnail: "/newpapers.png",
+  },
+  {
+    id: 17,
+    title: "Draft: Food Prices Ease After Strong Supply Week",
+    date: "2026.05.21",
+    author: "Admin Editor",
+    thumbnail: "/newpapers.png",
+  },
+];

@@ -21,6 +21,10 @@ const buildNewsQuery = (filters = {}) => {
     searchParams.set("q", filters.query);
   }
 
+  if (filters.politicalParty) {
+    searchParams.set("political-party", filters.politicalParty);
+  }
+
   const query = searchParams.toString();
 
   return query ? `/api/news?${query}` : "/api/news";
@@ -81,6 +85,7 @@ export const useGetNews = (filters = {}) => {
   }, [
     filters.publishDate,
     filters.query,
+    filters.politicalParty,
     filters.skip,
     JSON.stringify(filters.categoryIds || []),
     JSON.stringify(filters.categoryNames || []),
@@ -138,6 +143,7 @@ export const useNews = () => {
         title: payload.title,
         thumbnail,
         politicalParty: payload.politicalParty,
+        partyScores: payload.partyScores,
       });
 
       if (!res?.success) {

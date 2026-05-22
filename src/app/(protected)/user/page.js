@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Bookmark } from "lucide-react";
+import { BadgeCheck, Bookmark, CirclePlus } from "lucide-react";
 import { GreenBgTitle } from "@/components/general/title";
 import { VIEWED_NEWS_STORAGE_KEY } from "@/components/news/read/viewed-news-recorder";
 import { useCurrentUser } from "@/hooks/use-news";
@@ -24,29 +24,44 @@ export default function User() {
   const [menuItems, setMenuItems] = useState([]);
   const [savedItems, setSavedItems] = useState([]);
   const [readingItems, setReadingItems] = useState([]);
+  const [publishedItems, setPublishedItems] = useState([]);
+  const [draftItems, setDraftItems] = useState([]);
   const [viewedNews, setViewedNews] = useState([]);
   const [loading, setLoading] = useState(true);
+  const authorMode = user?.role === "admin";
   const displayUser = {
     ...(profileData || {}),
     name: user?.name || profileData?.name || "Reader",
     email: user?.email || profileData?.email || "",
+    authorMode,
   };
   const latestViewedNews = viewedNews.length ? viewedNews : readingItems;
 
   useEffect(() => {
     const loadProfileData = async () => {
       try {
-        const [profile, menu, savedNews, readingHistory] = await Promise.all([
+        const [
+          profile,
+          menu,
+          savedNews,
+          readingHistory,
+          publishedNews,
+          draftNews,
+        ] = await Promise.all([
           getApiData("/api/user/profile"),
           getApiData("/api/user/menu"),
           getApiData("/api/user/saved-news"),
           getApiData("/api/user/reading-history"),
+          getApiData("/api/user/published-news"),
+          getApiData("/api/user/draft-news"),
         ]);
 
         setProfileData(profile);
         setMenuItems(Array.isArray(menu) ? menu : []);
         setSavedItems(Array.isArray(savedNews) ? savedNews : []);
         setReadingItems(Array.isArray(readingHistory) ? readingHistory : []);
+        setPublishedItems(Array.isArray(publishedNews) ? publishedNews : []);
+        setDraftItems(Array.isArray(draftNews) ? draftNews : []);
       } catch (error) {
         console.error(error);
       } finally {
@@ -80,7 +95,18 @@ export default function User() {
       <section className="min-w-0 space-y-8">
         <ProfileHeader user={displayUser} />
         <NewsShelf title="Хадгалсан мэдээ" items={savedItems} />
-        <NewsShelf title="Сүүлд уншсан" items={latestViewedNews} />
+        {authorMode ? (
+          <>
+            <NewsShelf
+              title="Таны нийтэлсэн мэдээ"
+              items={publishedItems}
+              showCreateCard
+            />
+            <NewsShelf title="Drafted" items={draftItems} />
+          </>
+        ) : (
+          <NewsShelf title="Сүүлд уншсан" items={latestViewedNews} />
+        )}
       </section>
     </div>
   );
@@ -114,10 +140,15 @@ const ProfileHeader = ({ user }) => {
           className="size-20 rounded-full border-4 border-white object-cover shadow-sm"
         />
         <div>
-          <GreenBgTitle
-            title={user.name}
-            className="text-3xl font-black italic leading-none"
-          />
+          <div className="flex items-center gap-2">
+            <GreenBgTitle
+              title={user.name}
+              className="text-3xl font-black italic leading-none"
+            />
+            {user.authorMode ? (
+              <BadgeCheck className="size-5 fill-blue-500 text-white" />
+            ) : null}
+          </div>
           <p className="mt-2 text-sm text-black/55">{user.email}</p>
           <p className="text-sm text-black/55">{user.phone}</p>
         </div>
@@ -130,12 +161,13 @@ const ProfileHeader = ({ user }) => {
   );
 };
 
-const NewsShelf = ({ title, items }) => {
+const NewsShelf = ({ title, items, showCreateCard = false }) => {
   return (
     <section className="space-y-4">
       <GreenBgTitle title={title} className="text-3xl font-black italic" />
-      {items.length ? (
+      {items.length || showCreateCard ? (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+          {showCreateCard ? <CreateNewsCard /> : null}
           {items.map((item) => (
             <ProfileNewsCard key={item.id} item={item} />
           ))}
@@ -144,6 +176,23 @@ const NewsShelf = ({ title, items }) => {
         <p className="text-sm text-black/45">No profile news yet.</p>
       )}
     </section>
+  );
+};
+
+const CreateNewsCard = () => {
+  return (
+    <article className="group min-w-0">
+      <Link
+        href="/news/create"
+        className="flex aspect-[4/3] w-full flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-black/25 bg-[#d9d9d9] text-center text-black/65 transition hover:border-black/45 hover:text-black"
+      >
+        <span className="inline-flex size-12 items-center justify-center rounded-full bg-white shadow-sm">
+          <CirclePlus className="size-7" />
+        </span>
+        <span className="px-4 text-xs font-semibold">Шинээр нийтлэл бичих</span>
+      </Link>
+      <p className="mt-2 text-[0.65rem] text-black/35">Create news</p>
+    </article>
   );
 };
 

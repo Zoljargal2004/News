@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useEditNews } from "@/hooks/provider-news-editor";
 import { useCategories, useNews } from "@/hooks/use-news";
+import { politicalParties } from "@/data/political-parties";
 import {
   Select,
   SelectContent,
@@ -23,6 +24,15 @@ const STATUS_OPTIONS = [
   { value: "draft", label: "Draft" },
 ];
 
+const getDominantParty = (partyScores) => {
+  return politicalParties.reduce((dominantParty, party) => {
+    const dominantScore = Number(partyScores?.[dominantParty.id] || 0);
+    const partyScore = Number(partyScores?.[party.id] || 0);
+
+    return partyScore > dominantScore ? party : dominantParty;
+  }, politicalParties[0]);
+};
+
 export const PanelSidebar = () => {
   const { categories: fetchedCategories, loading: categoriesLoading } =
     useCategories();
@@ -35,6 +45,7 @@ export const PanelSidebar = () => {
     title,
     thumbnailImage,
     politicalParty,
+    partyScores,
     setCategories,
     setStatus,
     setRecommended,
@@ -64,6 +75,7 @@ export const PanelSidebar = () => {
   };
 
   const handleSubmit = async (publish = true) => {
+    const dominantParty = getDominantParty(partyScores);
     const res = await uploadNews({
       news,
       status: publish,
@@ -71,7 +83,8 @@ export const PanelSidebar = () => {
       recommended,
       title: title.trim(),
       thumbnailImage,
-      politicalParty: politicalParty.trim(),
+      politicalParty: politicalParty.trim() || dominantParty.label,
+      partyScores,
       sources,
     });
 
@@ -178,64 +191,85 @@ export const PanelSidebar = () => {
 };
 
 export const CoverageDetails = () => {
-  const rows = [
-    ["Мэдээллийг бусад сургууд:", 16],
-    ["АН намтай:", 3],
-    ["МАН намтай:", 7],
-    ["ХН намтай:", 1],
-    ["Төвийг сахисан:", 5],
-    ["Ерөнхий нам баримтлал:", 16],
-  ];
+  const { partyScores, setPartyScores } = useEditNews();
+  const totalScore = politicalParties.reduce(
+    (total, party) => total + Number(partyScores?.[party.id] || 0),
+    0,
+  );
+  const dominantParty = getDominantParty(partyScores);
+
+  const updatePartyScore = (partyId, value) => {
+    const score = Math.min(100, Math.max(0, Number(value) || 0));
+
+    setPartyScores((current) => ({
+      ...current,
+      [partyId]: score,
+    }));
+  };
 
   return (
     <section className="rounded-3xl bg-[#d9d9d9] p-6">
       <PanelHeading title="Coverage Details" />
       <div className="mt-4 space-y-2 text-sm">
-        {rows.map(([label, value]) => (
-          <div key={label} className="flex items-center justify-between gap-4">
-            <span>{label}</span>
-            <span>{value}</span>
-          </div>
-        ))}
+        <div className="flex items-center justify-between gap-4">
+          <span>Нийт оноо:</span>
+          <span>{totalScore}</span>
+        </div>
+        <div className="flex items-center justify-between gap-4">
+          <span>Гол хамаарал:</span>
+          <span>{dominantParty.shortLabel}</span>
+        </div>
       </div>
 
       <div className="mt-5 rounded-2xl border border-black/70 p-3">
-        <div className="grid grid-cols-3 gap-3 text-center text-xs">
-          {["АН", "МАН", "ХН"].map((title, index) => (
-            <div key={title} className="space-y-2">
-              <p>{title}</p>
-              {[0, 1, 2, 3].map((item) => (
-                <div
-                  key={item}
-                  className={`h-7 rounded-full ${
-                    index === 0
-                      ? "bg-red-400"
-                      : index === 1
-                        ? "bg-indigo-400"
-                        : "bg-yellow-300"
-                  }`}
+        <div className="overflow-hidden rounded-full bg-white">
+          <div className="flex h-4">
+            {politicalParties.map((party) => {
+              const score = Number(partyScores?.[party.id] || 0);
+              const width = totalScore > 0 ? (score / totalScore) * 100 : 0;
+
+              return (
+                <span
+                  key={party.id}
+                  style={{
+                    width: `${width}%`,
+                    backgroundColor: party.color,
+                  }}
                 />
-              ))}
-            </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="mt-5 space-y-4">
+          {politicalParties.map((party) => (
+            <label key={party.id} className="block space-y-2 text-xs">
+              <div className="flex items-center justify-between gap-3">
+                <span className="font-medium">{party.label}</span>
+                <span>{partyScores?.[party.id] || 0}%</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={partyScores?.[party.id] || 0}
+                onChange={(event) =>
+                  updatePartyScore(party.id, event.target.value)
+                }
+                className="w-full accent-black"
+              />
+            </label>
           ))}
         </div>
 
-        <p className="mt-4 text-center text-xs">Төвийг сахисан</p>
-        <div className="mt-2 flex justify-center gap-1 rounded-full bg-white py-2">
-          {["bg-red-400", "bg-yellow-400", "bg-green-400", "bg-blue-500"].map(
-            (color, index) => (
-              <span key={index} className={`size-5 rounded-full ${color}`} />
-            ),
-          )}
-        </div>
         <p className="mt-3 border-b border-black/60 pb-2 text-center text-xs text-black/45">
-          Энэ мэдээллийг бусад сайт дээрх холбоос тус бүрийг харах
+          Нийтлэл аль намтай илүү холбоотойг оноогоор тохируулна.
         </p>
       </div>
 
       <p className="mt-4 flex gap-2 text-xs text-black/45">
         <Info className="mt-0.5 size-4 shrink-0" />
-        Бус мэдээллийг хэрхэн хуваарьладаг талаар мэдээлэл авах
+        Энэ мэдээлэл нийтлэлийн улс төрийн хамаарлын шүүлтүүрт ашиглагдана.
       </p>
     </section>
   );

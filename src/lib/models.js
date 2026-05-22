@@ -73,6 +73,15 @@ const categorySchema = new Schema(
 
 const newsBlockSchema = new Schema({}, { _id: false, strict: false });
 
+const partyScoresSchema = new Schema(
+  {
+    democratic_party: { type: Number, required: true, default: 0, min: 0, max: 100 },
+    neutral: { type: Number, required: true, default: 100, min: 0, max: 100 },
+    peoples_party: { type: Number, required: true, default: 0, min: 0, max: 100 },
+  },
+  { _id: false },
+);
+
 const newsSchema = new Schema(
   {
     title: { type: String, required: true, trim: true },
@@ -81,6 +90,7 @@ const newsSchema = new Schema(
     status: { type: Boolean, required: true, default: false },
     recommended: { type: Boolean, required: true, default: false },
     political_party: { type: String, default: null },
+    party_scores: { type: partyScoresSchema, default: () => ({}) },
     author_id: { type: Schema.Types.ObjectId, ref: "User", required: true },
     categories: [{ type: Schema.Types.ObjectId, ref: "Category" }],
   },
@@ -126,6 +136,9 @@ categorySchema.index({ name: 1 }, { unique: true });
 newsSchema.index({ created_at: -1 });
 newsSchema.index({ status: 1, created_at: -1 });
 newsSchema.index({ categories: 1, created_at: -1 });
+newsSchema.index({ "party_scores.democratic_party": -1 });
+newsSchema.index({ "party_scores.peoples_party": -1 });
+newsSchema.index({ "party_scores.neutral": -1 });
 commentSchema.index({ news_id: 1, created_at: -1 });
 
 export const User = models.User || model("User", userSchema);
@@ -174,6 +187,7 @@ export const serializeNews = (news) => {
 
   const author = news.author_id && news.author_id.name ? news.author_id : null;
   const categories = Array.isArray(news.categories) ? news.categories : [];
+  const partyScores = news.party_scores || {};
 
   return {
     id: toId(news),
@@ -183,6 +197,14 @@ export const serializeNews = (news) => {
     status: Boolean(news.status),
     recommended: Boolean(news.recommended),
     political_party: news.political_party || null,
+    party_scores: {
+      democratic_party: Number(partyScores.democratic_party || 0),
+      neutral: Number(
+        partyScores.neutral ??
+          (!partyScores.democratic_party && !partyScores.peoples_party ? 100 : 0),
+      ),
+      peoples_party: Number(partyScores.peoples_party || 0),
+    },
     author_id: toId(news.author_id),
     author_name: author?.name,
     author_email: author?.email,

@@ -56,6 +56,15 @@ const categorySchema = new Schema(
 
 const newsBlockSchema = new Schema({}, { _id: false, strict: false });
 
+const partyScoresSchema = new Schema(
+  {
+    democratic_party: { type: Number, required: true, default: 0, min: 0, max: 100 },
+    neutral: { type: Number, required: true, default: 100, min: 0, max: 100 },
+    peoples_party: { type: Number, required: true, default: 0, min: 0, max: 100 },
+  },
+  { _id: false },
+);
+
 const newsSchema = new Schema(
   {
     title: { type: String, required: true, trim: true },
@@ -64,6 +73,7 @@ const newsSchema = new Schema(
     status: { type: Boolean, required: true, default: false },
     recommended: { type: Boolean, required: true, default: false },
     political_party: { type: String, default: null },
+    party_scores: { type: partyScoresSchema, default: () => ({}) },
     author_id: { type: Schema.Types.ObjectId, ref: "User", required: true },
     categories: [{ type: Schema.Types.ObjectId, ref: "Category" }],
   },
@@ -155,7 +165,8 @@ const articleTemplates = [
   {
     title: "City Council Approves New Public Transit Plan",
     categories: ["Politics", "Society"],
-    political_party: "Civic Coalition",
+    political_party: "Ардчилсан нам",
+    party_scores: { democratic_party: 65, neutral: 25, peoples_party: 10 },
     recommended: true,
     daysAgo: 0,
     hour: 8,
@@ -163,7 +174,8 @@ const articleTemplates = [
   {
     title: "Startups See Fresh Investment From Regional Funds",
     categories: ["Business", "Economy"],
-    political_party: null,
+    political_party: "Тэнцвэртэй",
+    party_scores: { democratic_party: 20, neutral: 60, peoples_party: 20 },
     recommended: true,
     daysAgo: 0,
     hour: 10,
@@ -171,7 +183,8 @@ const articleTemplates = [
   {
     title: "New Solar Project Expands Clean Power Capacity",
     categories: ["Environment", "Technology"],
-    political_party: "Green Party",
+    political_party: "Ардчилсан нам",
+    party_scores: { democratic_party: 70, neutral: 20, peoples_party: 10 },
     recommended: true,
     daysAgo: 0,
     hour: 13,
@@ -179,7 +192,8 @@ const articleTemplates = [
   {
     title: "Hospitals Launch Faster Appointment System",
     categories: ["Health", "Technology"],
-    political_party: null,
+    political_party: "Монгол Ардын нам",
+    party_scores: { democratic_party: 10, neutral: 25, peoples_party: 65 },
     recommended: false,
     daysAgo: 1,
     hour: 9,
@@ -187,7 +201,8 @@ const articleTemplates = [
   {
     title: "National Team Opens Training Camp",
     categories: ["Sports"],
-    political_party: null,
+    political_party: "Тэнцвэртэй",
+    party_scores: { democratic_party: 5, neutral: 90, peoples_party: 5 },
     recommended: false,
     daysAgo: 1,
     hour: 11,
@@ -195,7 +210,8 @@ const articleTemplates = [
   {
     title: "Teachers Test New Digital Classroom Tools",
     categories: ["Education", "Technology"],
-    political_party: null,
+    political_party: "Ардчилсан нам",
+    party_scores: { democratic_party: 55, neutral: 30, peoples_party: 15 },
     recommended: true,
     daysAgo: 1,
     hour: 15,
@@ -203,7 +219,8 @@ const articleTemplates = [
   {
     title: "Parliament Debates Small Business Tax Package",
     categories: ["Politics", "Economy", "Business"],
-    political_party: "Reform Party",
+    political_party: "Монгол Ардын нам",
+    party_scores: { democratic_party: 15, neutral: 20, peoples_party: 65 },
     recommended: false,
     daysAgo: 2,
     hour: 8,
@@ -211,7 +228,8 @@ const articleTemplates = [
   {
     title: "Festival Lineup Highlights Young Artists",
     categories: ["Culture"],
-    political_party: null,
+    political_party: "Тэнцвэртэй",
+    party_scores: { democratic_party: 10, neutral: 80, peoples_party: 10 },
     recommended: false,
     daysAgo: 2,
     hour: 12,
@@ -219,7 +237,8 @@ const articleTemplates = [
   {
     title: "Food Prices Ease After Strong Supply Week",
     categories: ["Economy", "Society"],
-    political_party: null,
+    political_party: "Монгол Ардын нам",
+    party_scores: { democratic_party: 15, neutral: 25, peoples_party: 60 },
     recommended: true,
     daysAgo: 2,
     hour: 17,
@@ -227,7 +246,8 @@ const articleTemplates = [
   {
     title: "Researchers Publish Air Quality Dashboard",
     categories: ["Environment", "Health", "Technology"],
-    political_party: null,
+    political_party: "Ардчилсан нам",
+    party_scores: { democratic_party: 60, neutral: 30, peoples_party: 10 },
     recommended: true,
     daysAgo: 3,
     hour: 10,
@@ -235,7 +255,8 @@ const articleTemplates = [
   {
     title: "Regional Leaders Meet For Trade Talks",
     categories: ["World", "Business"],
-    political_party: null,
+    political_party: "Тэнцвэртэй",
+    party_scores: { democratic_party: 25, neutral: 50, peoples_party: 25 },
     recommended: false,
     daysAgo: 3,
     hour: 14,
@@ -243,7 +264,8 @@ const articleTemplates = [
   {
     title: "Opinion: Local Journalism Needs Better Data",
     categories: ["Opinion", "Society"],
-    political_party: null,
+    political_party: "Ардчилсан нам",
+    party_scores: { democratic_party: 55, neutral: 35, peoples_party: 10 },
     recommended: false,
     daysAgo: 4,
     hour: 9,
@@ -251,7 +273,8 @@ const articleTemplates = [
   {
     title: "Banks Roll Out Mobile Security Upgrades",
     categories: ["Technology", "Business"],
-    political_party: null,
+    political_party: "Монгол Ардын нам",
+    party_scores: { democratic_party: 15, neutral: 35, peoples_party: 50 },
     recommended: false,
     daysAgo: 4,
     hour: 16,
@@ -259,7 +282,8 @@ const articleTemplates = [
   {
     title: "University Opens Climate Research Center",
     categories: ["Education", "Environment"],
-    political_party: null,
+    political_party: "Тэнцвэртэй",
+    party_scores: { democratic_party: 30, neutral: 55, peoples_party: 15 },
     recommended: true,
     daysAgo: 5,
     hour: 10,
@@ -267,7 +291,8 @@ const articleTemplates = [
   {
     title: "Community Clinics Add Weekend Hours",
     categories: ["Health", "Society"],
-    political_party: null,
+    political_party: "Монгол Ардын нам",
+    party_scores: { democratic_party: 10, neutral: 30, peoples_party: 60 },
     recommended: false,
     daysAgo: 5,
     hour: 15,
@@ -275,7 +300,8 @@ const articleTemplates = [
   {
     title: "Draft: Election Calendar Update",
     categories: ["Politics"],
-    political_party: "Independent",
+    political_party: "Тэнцвэртэй",
+    party_scores: { democratic_party: 35, neutral: 40, peoples_party: 25 },
     recommended: false,
     status: false,
     daysAgo: 6,
@@ -380,6 +406,7 @@ const upsertNews = async (seededUsers, seededCategories) => {
           status: article.status ?? true,
           recommended: article.recommended,
           political_party: article.political_party,
+          party_scores: article.party_scores,
           author_id: author._id,
           categories: categoryIds,
           created_at: publishedAt,
