@@ -4,7 +4,7 @@ export default function AboutPage() {
   return (
     <section className="space-y-12">
       <header className="space-y-3">
-        <h1 className="text-4xl font-semibold">About Us</h1>
+        <h1 className="text-4xl font-semibold">Бидний тухай</h1>
         <p className="max-w-3xl text-muted-foreground">
           Learn more about our newsroom, our mission, and the people behind our reporting.
         </p>
@@ -25,7 +25,7 @@ export default function AboutPage() {
       </section>
 
       <section className="space-y-5">
-        <h2 className="text-2xl font-semibold">Our Team</h2>
+        <h2 className="text-2xl font-semibold">Манай хамт олон</h2>
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {about.team.map((member) => (
@@ -49,7 +49,7 @@ export default function AboutPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-2xl font-semibold">Contact Information</h2>
+        <h2 className="text-2xl font-semibold">Холбоо барих</h2>
         <div className="text-muted-foreground">
           <p>Email: {about.contact.email}</p>
           <p>Phone: {about.contact.phone}</p>
