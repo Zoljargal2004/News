@@ -6,22 +6,56 @@ import { Bookmark } from "lucide-react";
 import { GreenBgTitle } from "@/components/general/title";
 import { VIEWED_NEWS_STORAGE_KEY } from "@/components/news/read/viewed-news-recorder";
 import { useCurrentUser } from "@/hooks/use-news";
-import {
-  profileMenuItems,
-  profileUser,
-  readingHistory,
-  savedNews,
-} from "@/data/user-page-data";
+
+const getApiData = async (url) => {
+  const res = await fetch(url);
+  const payload = await res.json();
+
+  if (!res.ok || !payload?.success) {
+    throw new Error(payload?.error || `Failed to load ${url}`);
+  }
+
+  return payload.data;
+};
 
 export default function User() {
   const { user } = useCurrentUser();
+  const [profileData, setProfileData] = useState(null);
+  const [menuItems, setMenuItems] = useState([]);
+  const [savedItems, setSavedItems] = useState([]);
+  const [readingItems, setReadingItems] = useState([]);
   const [viewedNews, setViewedNews] = useState([]);
+  const [loading, setLoading] = useState(true);
   const displayUser = {
-    ...profileUser,
-    name: user?.name || profileUser.name,
-    email: user?.email || profileUser.email,
+    ...(profileData || {}),
+    name: user?.name || profileData?.name || "Reader",
+    email: user?.email || profileData?.email || "",
   };
-  const latestViewedNews = viewedNews.length ? viewedNews : readingHistory;
+  const latestViewedNews = viewedNews.length ? viewedNews : readingItems;
+
+  useEffect(() => {
+    const loadProfileData = async () => {
+      try {
+        const [profile, menu, savedNews, readingHistory] = await Promise.all([
+          getApiData("/api/user/profile"),
+          getApiData("/api/user/menu"),
+          getApiData("/api/user/saved-news"),
+          getApiData("/api/user/reading-history"),
+        ]);
+
+        setProfileData(profile);
+        setMenuItems(Array.isArray(menu) ? menu : []);
+        setSavedItems(Array.isArray(savedNews) ? savedNews : []);
+        setReadingItems(Array.isArray(readingHistory) ? readingHistory : []);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProfileData();
+  }, []);
 
   useEffect(() => {
     try {
@@ -35,17 +69,18 @@ export default function User() {
     }
   }, []);
 
+  if (loading) {
+    return <p className="text-sm text-black/45">Loading profile...</p>;
+  }
+
   return (
     <div className="grid gap-8 lg:grid-cols-[180px_1fr] lg:items-start">
-      <ProfileMenu items={profileMenuItems} />
+      <ProfileMenu items={menuItems} />
 
       <section className="min-w-0 space-y-8">
         <ProfileHeader user={displayUser} />
-        <NewsShelf title="Хадгалсан мэдээ" items={savedNews} />
-        <NewsShelf
-          title="Сүүлд уншсан"
-          items={latestViewedNews}
-        />
+        <NewsShelf title="Хадгалсан мэдээ" items={savedItems} />
+        <NewsShelf title="Сүүлд уншсан" items={latestViewedNews} />
       </section>
     </div>
   );
@@ -95,20 +130,19 @@ const ProfileHeader = ({ user }) => {
   );
 };
 
-const NewsShelf = ({ title, items, helper }) => {
+const NewsShelf = ({ title, items }) => {
   return (
     <section className="space-y-4">
-      <div className="flex flex-wrap items-end gap-3">
-        <GreenBgTitle title={title} className="text-3xl font-black italic" />
-        {helper ? (
-          <span className="pb-1 text-xs text-black/45">{helper}</span>
-        ) : null}
-      </div>
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-        {items.map((item) => (
-          <ProfileNewsCard key={item.id} item={item} />
-        ))}
-      </div>
+      <GreenBgTitle title={title} className="text-3xl font-black italic" />
+      {items.length ? (
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+          {items.map((item) => (
+            <ProfileNewsCard key={item.id} item={item} />
+          ))}
+        </div>
+      ) : (
+        <p className="text-sm text-black/45">No profile news yet.</p>
+      )}
     </section>
   );
 };
