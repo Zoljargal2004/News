@@ -8,7 +8,7 @@ export const politicalParties = [
   {
     id: "neutral",
     label: "Тэнцвэртэй",
-    shortLabel: "Neutral",
+    shortLabel: "Төв",
     color: "#9ca3af",
   },
   {

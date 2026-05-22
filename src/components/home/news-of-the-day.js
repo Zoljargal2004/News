@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { ChevronsUp } from "lucide-react";
-import { NewsCard } from "@/components/general/news-items";
+import { NewsCard, PartyScoreBar } from "@/components/general/news-items";
 import { GreenBgTitle } from "@/components/general/title";
 import { useGetNews } from "@/hooks/use-news";
+import { politicalParties } from "@/data/political-parties";
 
 const SECTION_CONFIG = [
   { title: "Онцлох мэдээ", helper: "Шинэчилсэн мэдээ" },
@@ -14,20 +16,30 @@ const SECTION_CONFIG = [
 ];
 
 export const TodaysNews = () => {
-  const { news, loading } = useGetNews();
+  const [selectedParty, setSelectedParty] = useState("all");
+  const { news, loading } = useGetNews({
+    politicalParty: selectedParty === "all" ? "" : selectedParty,
+  });
 
   if (loading) {
     return <p className="text-sm text-black/45">Loading news...</p>;
-  }
-
-  if (!news.length) {
-    return <p className="text-sm text-black/45">No news yet.</p>;
   }
 
   const today = news.slice(0, 4);
 
   return (
     <div className="space-y-12">
+      <PartyFilter
+        selectedParty={selectedParty}
+        setSelectedParty={setSelectedParty}
+      />
+
+      {!news.length ? (
+        <p className="text-sm text-black/45">No news found for this filter.</p>
+      ) : null}
+
+      {news.length ? (
+        <>
       <section className="space-y-5">
         <SectionTitle title="Өнөөдрийн мэдээ" helper="2026.05.08" center />
         <div className="grid gap-4 lg:grid-cols-[1fr_1.65fr_1fr] lg:items-start">
@@ -45,6 +57,9 @@ export const TodaysNews = () => {
                     {today[1].title}
                   </h2>
                   <Meta item={today[1]} />
+                  <div className="mt-3">
+                    <PartyScoreBar scores={today[1].party_scores} />
+                  </div>
                 </div>
               </Link>
             </article>
@@ -73,7 +88,54 @@ export const TodaysNews = () => {
         <ChevronsUp className="size-9 text-black/75" />
         <GreenBgTitle title="Жаахан дээрээс нь буцах" className="text-sm" />
       </div>
+        </>
+      ) : null}
     </div>
+  );
+};
+
+const PartyFilter = ({ selectedParty, setSelectedParty }) => {
+  const filterItems = [
+    { id: "all", label: "Бүх мэдээ", shortLabel: "All", color: "#111111" },
+    ...politicalParties,
+  ];
+
+  return (
+    <section className="space-y-3">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <GreenBgTitle title="Намын хамаарлаар шүүх" className="text-3xl" />
+          <p className="mt-2 text-sm text-black/45">
+            Мэдээг АН, төвийг сахисан, МАН хамаарлаар харна.
+          </p>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {filterItems.map((party) => {
+          const active = selectedParty === party.id;
+
+          return (
+            <button
+              key={party.id}
+              type="button"
+              onClick={() => setSelectedParty(party.id)}
+              className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
+                active
+                  ? "border-black bg-black text-white"
+                  : "border-black/10 bg-white text-black/70 hover:border-black/30"
+              }`}
+            >
+              <span
+                className="mr-2 inline-block size-2 rounded-full"
+                style={{ backgroundColor: party.color }}
+              />
+              {party.label}
+            </button>
+          );
+        })}
+      </div>
+    </section>
   );
 };
 
