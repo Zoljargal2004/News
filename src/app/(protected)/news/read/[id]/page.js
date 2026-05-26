@@ -2,6 +2,7 @@ import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { CommentsSection } from "@/components/news/read/comments-section";
 import { ViewedNewsRecorder } from "@/components/news/read/viewed-news-recorder";
+import { politicalParties } from "@/data/political-parties";
 
 const getBaseUrl = async () => {
   const headerStore = await headers();
@@ -59,6 +60,7 @@ export default async function Page({ params }) {
             <span>Холбогдох нам: {news.political_party}</span>
           ) : null}
         </div>
+        <ArticlePartyIndicator scores={news?.party_scores} />
       </header>
 
       <NewsBody body={news?.news || []} />
@@ -92,5 +94,62 @@ const NewsBody = ({ body }) => {
         return null;
       })}
     </div>
+  );
+};
+
+const ArticlePartyIndicator = ({ scores }) => {
+  const safeScores = scores || {};
+  const totalScore = politicalParties.reduce(
+    (total, party) => total + Number(safeScores[party.id] || 0),
+    0,
+  );
+
+  if (!totalScore) {
+    return null;
+  }
+
+  return (
+    <section className="space-y-3 rounded-lg border bg-white p-4">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-sm font-semibold">Улс төрийн индикатор</h2>
+        <span className="text-xs text-muted-foreground">Нийт оноо: {totalScore}</span>
+      </div>
+
+      <div className="flex overflow-hidden rounded-full bg-black/10">
+        {politicalParties.map((party) => {
+          const score = Number(safeScores[party.id] || 0);
+          const width = (score / totalScore) * 100;
+
+          return (
+            <span
+              key={party.id}
+              title={`${party.label}: ${score}%`}
+              className="h-2.5"
+              style={{
+                width: `${width}%`,
+                backgroundColor: party.color,
+              }}
+            />
+          );
+        })}
+      </div>
+
+      <div className="grid gap-2 text-xs text-muted-foreground sm:grid-cols-3">
+        {politicalParties.map((party) => {
+          const score = Number(safeScores[party.id] || 0);
+
+          return (
+            <div key={party.id} className="flex items-center gap-2">
+              <span
+                className="size-2 rounded-full"
+                style={{ backgroundColor: party.color }}
+              />
+              <span className="font-medium text-foreground">{party.shortLabel}</span>
+              <span>{score}%</span>
+            </div>
+          );
+        })}
+      </div>
+    </section>
   );
 };
