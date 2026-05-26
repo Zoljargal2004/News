@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 
 const VIEWED_NEWS_STORAGE_KEY = "newsletter_viewed_news";
+const VIEWED_NEWS_UPDATED_EVENT = "newsletter_viewed_news_updated";
 const MAX_VIEWED_NEWS = 10;
 
 export const ViewedNewsRecorder = ({ news }) => {
@@ -13,7 +14,7 @@ export const ViewedNewsRecorder = ({ news }) => {
 
     const viewedItem = {
       id: news.id,
-      title: news.title || "Untitled news",
+      title: news.title || "Гарчиггүй мэдээ",
       thumbnail: news.thumbnail || "/newpapers.png",
       date: news.created_at
         ? new Date(news.created_at).toLocaleDateString()
@@ -34,12 +35,14 @@ export const ViewedNewsRecorder = ({ news }) => {
         VIEWED_NEWS_STORAGE_KEY,
         JSON.stringify([viewedItem, ...withoutCurrent].slice(0, MAX_VIEWED_NEWS)),
       );
+      window.dispatchEvent(new Event(VIEWED_NEWS_UPDATED_EVENT));
     } catch {
       localStorage.setItem(VIEWED_NEWS_STORAGE_KEY, JSON.stringify([viewedItem]));
+      window.dispatchEvent(new Event(VIEWED_NEWS_UPDATED_EVENT));
     }
   }, [news]);
 
   return null;
 };
 
-export { VIEWED_NEWS_STORAGE_KEY };
+export { VIEWED_NEWS_STORAGE_KEY, VIEWED_NEWS_UPDATED_EVENT };

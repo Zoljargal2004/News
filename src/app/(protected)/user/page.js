@@ -4,8 +4,18 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { BadgeCheck, Bookmark, CirclePlus } from "lucide-react";
 import { GreenBgTitle } from "@/components/general/title";
-import { VIEWED_NEWS_STORAGE_KEY } from "@/components/news/read/viewed-news-recorder";
+import {
+  VIEWED_NEWS_STORAGE_KEY,
+  VIEWED_NEWS_UPDATED_EVENT,
+} from "@/components/news/read/viewed-news-recorder";
 import { useCurrentUser } from "@/hooks/use-news";
+import {
+  isNewsSaved,
+  readSavedNews,
+  SAVED_NEWS_UPDATED_EVENT,
+  toggleSavedNews,
+  toStoredNewsItem,
+} from "@/lib/user-news-storage";
 
 const getApiData = async (url) => {
   const res = await fetch(url);
@@ -18,12 +28,38 @@ const getApiData = async (url) => {
   return payload.data;
 };
 
+const normalizeProfileNewsItem = (item) => {
+  const storedItem = toStoredNewsItem(item);
+
+  return {
+    ...item,
+    ...storedItem,
+    author: item?.author || item?.author_name || storedItem.author,
+    date:
+      item?.date ||
+      (item?.created_at ? new Date(item.created_at).toLocaleDateString() : ""),
+  };
+};
+
+const readViewedNews = () => {
+  try {
+    const storedItems = JSON.parse(
+      localStorage.getItem(VIEWED_NEWS_STORAGE_KEY) || "[]",
+    );
+
+    return Array.isArray(storedItems)
+      ? storedItems.filter((item) => item?.id).map(normalizeProfileNewsItem)
+      : [];
+  } catch {
+    return [];
+  }
+};
+
 export default function User() {
-  const { user } = useCurrentUser();
+  const { user, loading: userLoading } = useCurrentUser();
   const [profileData, setProfileData] = useState(null);
   const [menuItems, setMenuItems] = useState([]);
   const [savedItems, setSavedItems] = useState([]);
-  const [readingItems, setReadingItems] = useState([]);
   const [publishedItems, setPublishedItems] = useState([]);
   const [draftItems, setDraftItems] = useState([]);
   const [viewedNews, setViewedNews] = useState([]);
@@ -35,33 +71,31 @@ export default function User() {
     email: user?.email || profileData?.email || "",
     authorMode,
   };
-  const latestViewedNews = viewedNews.length ? viewedNews : readingItems;
 
   useEffect(() => {
+    if (userLoading) {
+      return;
+    }
+
     const loadProfileData = async () => {
       try {
-        const [
-          profile,
-          menu,
-          savedNews,
-          readingHistory,
-          publishedNews,
-          draftNews,
-        ] = await Promise.all([
+        const [profile, menu, publishedNews, draftNews] = await Promise.all([
           getApiData("/api/user/profile"),
           getApiData("/api/user/menu"),
-          getApiData("/api/user/saved-news"),
-          getApiData("/api/user/reading-history"),
           getApiData("/api/user/published-news"),
           getApiData("/api/user/draft-news"),
         ]);
 
         setProfileData(profile);
         setMenuItems(Array.isArray(menu) ? menu : []);
-        setSavedItems(Array.isArray(savedNews) ? savedNews : []);
-        setReadingItems(Array.isArray(readingHistory) ? readingHistory : []);
-        setPublishedItems(Array.isArray(publishedNews) ? publishedNews : []);
-        setDraftItems(Array.isArray(draftNews) ? draftNews : []);
+        setPublishedItems(
+          Array.isArray(publishedNews)
+            ? publishedNews.map(normalizeProfileNewsItem)
+            : [],
+        );
+        setDraftItems(
+          Array.isArray(draftNews) ? draftNews.map(normalizeProfileNewsItem) : [],
+        );
       } catch (error) {
         console.error(error);
       } finally {
@@ -70,21 +104,27 @@ export default function User() {
     };
 
     loadProfileData();
-  }, []);
+  }, [userLoading]);
 
   useEffect(() => {
-    try {
-      const storedItems = JSON.parse(
-        localStorage.getItem(VIEWED_NEWS_STORAGE_KEY) || "[]",
-      );
+    const syncLocalNews = () => {
+      setSavedItems(readSavedNews().map(normalizeProfileNewsItem));
+      setViewedNews(readViewedNews());
+    };
 
-      setViewedNews(Array.isArray(storedItems) ? storedItems : []);
-    } catch {
-      setViewedNews([]);
-    }
+    syncLocalNews();
+    window.addEventListener(SAVED_NEWS_UPDATED_EVENT, syncLocalNews);
+    window.addEventListener(VIEWED_NEWS_UPDATED_EVENT, syncLocalNews);
+    window.addEventListener("storage", syncLocalNews);
+
+    return () => {
+      window.removeEventListener(SAVED_NEWS_UPDATED_EVENT, syncLocalNews);
+      window.removeEventListener(VIEWED_NEWS_UPDATED_EVENT, syncLocalNews);
+      window.removeEventListener("storage", syncLocalNews);
+    };
   }, []);
 
-  if (loading) {
+  if (loading || userLoading) {
     return <p className="text-sm text-black/45">Профайл ачааллаж байна...</p>;
   }
 
@@ -104,9 +144,8 @@ export default function User() {
             />
             <NewsShelf title="Ноорог мэдээ" items={draftItems} />
           </>
-        ) : (
-          <NewsShelf title="Сүүлд уншсан" items={latestViewedNews} />
-        )}
+        ) : null}
+        <NewsShelf title="Сүүлд уншсан" items={viewedNews} />
       </section>
     </div>
   );
@@ -197,23 +236,55 @@ const CreateNewsCard = () => {
 };
 
 const ProfileNewsCard = ({ item }) => {
+  const [saved, setSaved] = useState(false);
+  const href = `/news/read/${item.id}`;
+
+  useEffect(() => {
+    const syncSavedState = () => {
+      setSaved(isNewsSaved(item.id));
+    };
+
+    syncSavedState();
+    window.addEventListener(SAVED_NEWS_UPDATED_EVENT, syncSavedState);
+    window.addEventListener("storage", syncSavedState);
+
+    return () => {
+      window.removeEventListener(SAVED_NEWS_UPDATED_EVENT, syncSavedState);
+      window.removeEventListener("storage", syncSavedState);
+    };
+  }, [item.id]);
+
+  const handleSaveClick = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setSaved(toggleSavedNews(item));
+  };
+
   return (
     <article className="group min-w-0">
-      <Link
-        href={`/news/read/${item.id}`}
-        className="relative block overflow-hidden rounded-lg bg-[#d9d9d9]"
-      >
-        <img
-          src={item.thumbnail}
-          alt={item.title}
-          className="aspect-[4/3] w-full object-cover transition duration-300 group-hover:scale-[1.03]"
-        />
-        <span className="absolute bottom-2 right-2 inline-flex size-7 items-center justify-center rounded-full bg-white text-black shadow-sm">
-          <Bookmark className="size-3.5 fill-black" />
-        </span>
-      </Link>
+      <div className="relative">
+        <Link
+          href={href}
+          className="block overflow-hidden rounded-lg bg-[#d9d9d9]"
+        >
+          <img
+            src={item.thumbnail || "/newpapers.png"}
+            alt={item.title}
+            className="aspect-[4/3] w-full object-cover transition duration-300 group-hover:scale-[1.03]"
+          />
+        </Link>
+        <button
+          type="button"
+          aria-label={saved ? "Хадгалснаас хасах" : "Хадгалах"}
+          aria-pressed={saved}
+          onClick={handleSaveClick}
+          className="absolute bottom-2 right-2 inline-flex size-7 items-center justify-center rounded-full bg-white text-black shadow-sm transition hover:scale-105"
+        >
+          <Bookmark className={`size-3.5 ${saved ? "fill-black" : ""}`} />
+        </button>
+      </div>
       <h2 className="mt-2 line-clamp-3 text-xs font-semibold leading-tight">
-        <Link href={`/news/read/${item.id}`}>{item.title}</Link>
+        <Link href={href}>{item.title}</Link>
       </h2>
       <p className="mt-2 text-[0.65rem] text-black/35">
         {item.date} | Зохиогч: {item.author}

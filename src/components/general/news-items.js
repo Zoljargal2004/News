@@ -1,28 +1,64 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { Bookmark } from "lucide-react";
 import { politicalParties } from "@/data/political-parties";
+import {
+  isNewsSaved,
+  SAVED_NEWS_UPDATED_EVENT,
+  toggleSavedNews,
+} from "@/lib/user-news-storage";
 
 export const NewsCard = ({ data, variant = "default" }) => {
   const href = `/news/read/${data.id}`;
   const large = variant === "large";
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    const syncSavedState = () => {
+      setSaved(isNewsSaved(data?.id));
+    };
+
+    syncSavedState();
+    window.addEventListener(SAVED_NEWS_UPDATED_EVENT, syncSavedState);
+    window.addEventListener("storage", syncSavedState);
+
+    return () => {
+      window.removeEventListener(SAVED_NEWS_UPDATED_EVENT, syncSavedState);
+      window.removeEventListener("storage", syncSavedState);
+    };
+  }, [data?.id]);
+
+  const handleSaveClick = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setSaved(toggleSavedNews(data));
+  };
 
   return (
     <article className="group">
-      <Link
-        href={href}
-        className="relative block overflow-hidden rounded-2xl bg-[#d9d9d9]"
-      >
-        <img
-          src={data?.thumbnail || "/newpapers.png"}
-          alt={data?.title || "Мэдээний зураг"}
-          className={`${large ? "aspect-[16/9]" : "aspect-[4/3]"} w-full object-cover transition duration-300 group-hover:scale-[1.03]`}
-        />
-        <span className="absolute bottom-2 right-2 inline-flex size-7 items-center justify-center rounded-full bg-white text-black shadow-sm">
-          <Bookmark className="size-3.5 fill-black" />
-        </span>
-      </Link>
+      <div className="relative">
+        <Link
+          href={href}
+          className="block overflow-hidden rounded-2xl bg-[#d9d9d9]"
+        >
+          <img
+            src={data?.thumbnail || "/newpapers.png"}
+            alt={data?.title || "Мэдээний зураг"}
+            className={`${large ? "aspect-[16/9]" : "aspect-[4/3]"} w-full object-cover transition duration-300 group-hover:scale-[1.03]`}
+          />
+        </Link>
+        <button
+          type="button"
+          aria-label={saved ? "Хадгалснаас хасах" : "Хадгалах"}
+          aria-pressed={saved}
+          onClick={handleSaveClick}
+          className="absolute bottom-2 right-2 inline-flex size-7 items-center justify-center rounded-full bg-white text-black shadow-sm transition hover:scale-105"
+        >
+          <Bookmark className={`size-3.5 ${saved ? "fill-black" : ""}`} />
+        </button>
+      </div>
       <div className="mt-3 space-y-2">
         <h3
           className={`${large ? "text-2xl" : "text-sm"} font-semibold leading-tight`}
