@@ -46,7 +46,7 @@ export const Auth = () => {
         throw new Error(payload?.error || "Нэвтрэлт амжилтгүй боллоо");
       }
 
-      toast(isLogin ? "Нэвтэрлээ" : "Бүртгэл үүсгэлээ");
+      toast(isLogin ? "Амжилттай нэвтэрлээ" : "Бүртгэл үүсгэлээ");
       router.push("/");
       router.refresh();
     } catch (error) {
@@ -88,7 +88,7 @@ export const Auth = () => {
             type="email"
             value={form.email}
             onChange={(event) => updateField("email", event.target.value)}
-            placeholder="you@example.com"
+            placeholder="И-мэйл хаягаа оруулна уу"
             autoComplete="email"
             required
           />
@@ -99,7 +99,7 @@ export const Auth = () => {
             type="password"
             value={form.password}
             onChange={(event) => updateField("password", event.target.value)}
-            placeholder="Нууц үг"
+            placeholder="Нууц үгээ оруулна уу"
             autoComplete={isLogin ? "current-password" : "new-password"}
             required
             minLength={6}

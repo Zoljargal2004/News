@@ -39,10 +39,10 @@ export default async function Page({ params }) {
   const news = await getNewsById(id);
 
   return (
-    <article className="mx-auto max-w-3xl space-y-8">
+    <article className="mx-auto w-full max-w-4xl space-y-10 overflow-x-hidden px-4 sm:px-6">
       <ViewedNewsRecorder news={news} />
 
-      <div className="overflow-hidden rounded-lg bg-muted">
+      <div className="mx-auto max-w-3xl overflow-hidden rounded-lg bg-muted">
         <img
           src={news?.thumbnail || "/newpapers.png"}
           alt={news?.title || "зураг"}
@@ -50,11 +50,11 @@ export default async function Page({ params }) {
         />
       </div>
 
-      <header className="space-y-3">
+      <header className="mx-auto max-w-3xl space-y-4 text-center">
         <h1 className="text-3xl font-semibold tracking-tight sm:text-5xl">
           {news?.title}
         </h1>
-        <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
+        <div className="flex flex-wrap justify-center gap-3 text-sm text-muted-foreground">
           {news?.author_name ? <span>Нийтэлсэн: {news.author_name}</span> : null}
           {news?.political_party ? (
             <span>Холбогдох нам: {news.political_party}</span>
@@ -64,20 +64,22 @@ export default async function Page({ params }) {
       </header>
 
       <NewsBody body={news?.news || []} />
-      <CommentsSection newsId={news.id} />
+      <div className="mx-auto w-full max-w-3xl">
+        <CommentsSection newsId={news.id} />
+      </div>
     </article>
   );
 }
 
 const NewsBody = ({ body }) => {
   return (
-    <div className="space-y-5 text-base leading-7">
+    <div className="mx-auto w-full max-w-3xl space-y-6 break-words text-left text-lg leading-8 [&_*]:max-w-full [&_a]:break-all [&_p]:break-words">
       {body.map((ele, i) => {
         if (ele.type === "p") {
           return (
             <div
               key={i}
-              className="[&_p]:mb-4 [&_p:last-child]:mb-0"
+              className="overflow-hidden [&_p]:mb-4 [&_p:last-child]:mb-0"
               dangerouslySetInnerHTML={{ __html: ele.value }}
             />
           );
@@ -109,8 +111,8 @@ const ArticlePartyIndicator = ({ scores }) => {
   }
 
   return (
-    <section className="space-y-3 rounded-lg border bg-white p-4">
-      <div className="flex items-center justify-between gap-3">
+    <section className="space-y-3 overflow-hidden rounded-lg border bg-white p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-sm font-semibold">Улс төрийн индикатор</h2>
         <span className="text-xs text-muted-foreground">Нийт оноо: {totalScore}</span>
       </div>

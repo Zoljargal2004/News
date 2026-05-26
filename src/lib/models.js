@@ -112,6 +112,17 @@ const commentSchema = new Schema(
   },
 );
 
+const savedSchema = new Schema(
+  {
+    user_id: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    news_id: { type: Schema.Types.ObjectId, ref: "News", required: true },
+  },
+  {
+    ...baseSchemaOptions,
+    timestamps: { createdAt: "created_at", updatedAt: "updated_at" },
+  },
+);
+
 const advertisingRequestSchema = new Schema(
   {
     company_name: { type: String, required: true, trim: true },
@@ -140,12 +151,14 @@ newsSchema.index({ "party_scores.democratic_party": -1 });
 newsSchema.index({ "party_scores.peoples_party": -1 });
 newsSchema.index({ "party_scores.neutral": -1 });
 commentSchema.index({ news_id: 1, created_at: -1 });
+savedSchema.index({ user_id: 1, news_id: 1 }, { unique: true });
 
 export const User = models.User || model("User", userSchema);
 export const Session = models.Session || model("Session", sessionSchema);
 export const Category = models.Category || model("Category", categorySchema);
 export const News = models.News || model("News", newsSchema);
 export const Comment = models.Comment || model("Comment", commentSchema);
+export const Saveds = models.Saveds || model("Saveds", savedSchema);
 
 export const isObjectId = (value) => Types.ObjectId.isValid(String(value || ""));
 

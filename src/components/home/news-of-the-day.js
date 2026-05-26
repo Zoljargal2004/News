@@ -64,10 +64,14 @@ export const TodaysNews = () => {
             );
           })}
 
-          <div className="flex flex-col items-center gap-2 pb-4">
+          <button
+            type="button"
+            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            className="mx-auto flex flex-col items-center gap-2 pb-4"
+          >
             <ChevronsUp className="size-9 text-black/75" />
-            <GreenBgTitle title="Жаахан дээрээс нь буцах" className="text-sm" />
-          </div>
+            <GreenBgTitle title="Дээш буцах" className="text-sm" />
+          </button>
         </>
       ) : null}
     </div>
