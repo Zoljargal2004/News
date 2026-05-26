@@ -1,9 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
 import { ChevronsUp } from "lucide-react";
-import { NewsCard, PartyScoreBar } from "@/components/general/news-items";
+import { NewsCard } from "@/components/general/news-items";
 import { GreenBgTitle } from "@/components/general/title";
 import { useGetNews } from "@/hooks/use-news";
 import { politicalParties } from "@/data/political-parties";
@@ -40,54 +39,35 @@ export const TodaysNews = () => {
 
       {news.length ? (
         <>
-      <section className="space-y-5">
-        <SectionTitle title="Өнөөдрийн мэдээ" helper="2026.05.08" center />
-        <div className="grid gap-4 lg:grid-cols-[1fr_1.65fr_1fr] lg:items-start">
-          {today[0] ? <NewsCard data={today[0]} /> : null}
-          {today[1] ? (
-            <article className="group overflow-hidden rounded-2xl bg-white shadow-sm">
-              <Link href={`/news/read/${today[1].id}`} className="relative block">
-                <img
-                  src={today[1].thumbnail || "/newpapers.png"}
-                  alt={today[1].title}
-                  className="aspect-[16/7] w-full object-cover"
-                />
-                <div className="absolute inset-x-3 bottom-3 rounded-2xl bg-white p-4 shadow-sm">
-                  <h2 className="text-xl font-semibold leading-tight">
-                    {today[1].title}
-                  </h2>
-                  <Meta item={today[1]} />
-                  <div className="mt-3">
-                    <PartyScoreBar scores={today[1].party_scores} />
-                  </div>
-                </div>
-              </Link>
-            </article>
-          ) : null}
-          {today[2] ? <NewsCard data={today[2]} /> : null}
-        </div>
-      </section>
+          <section className="space-y-5">
+            <SectionTitle title="Өнөөдрийн мэдээ" helper="2026.05.08" center />
+            <div className="grid gap-4 lg:grid-cols-[1fr_1.45fr_1fr] lg:items-start">
+              {today[0] ? <NewsCard data={today[0]} /> : null}
+              {today[1] ? <NewsCard data={today[1]} variant="large" /> : null}
+              {today[2] ? <NewsCard data={today[2]} /> : null}
+            </div>
+          </section>
 
-      {SECTION_CONFIG.map((section, index) => {
-        const start = 4 + index * 6;
-        const items = news.slice(start, start + 6);
-        const fallbackItems = items.length ? items : news.slice(0, 6);
+          {SECTION_CONFIG.map((section, index) => {
+            const start = 4 + index * 6;
+            const items = news.slice(start, start + 6);
+            const fallbackItems = items.length ? items : news.slice(0, 6);
 
-        return (
-          <NewsSection
-            key={section.title}
-            title={section.title}
-            helper={section.helper}
-            items={fallbackItems}
-            lead={index !== SECTION_CONFIG.length - 1}
-          />
-        );
-      })}
+            return (
+              <NewsSection
+                key={section.title}
+                title={section.title}
+                helper={section.helper}
+                items={fallbackItems}
+                lead={index !== SECTION_CONFIG.length - 1}
+              />
+            );
+          })}
 
-      <div className="flex flex-col items-center gap-2 pb-4">
-        <ChevronsUp className="size-9 text-black/75" />
-        <GreenBgTitle title="Жаахан дээрээс нь буцах" className="text-sm" />
-      </div>
+          <div className="flex flex-col items-center gap-2 pb-4">
+            <ChevronsUp className="size-9 text-black/75" />
+            <GreenBgTitle title="Жаахан дээрээс нь буцах" className="text-sm" />
+          </div>
         </>
       ) : null}
     </div>
@@ -169,18 +149,6 @@ const SectionTitle = ({ title, helper, center = false }) => {
     >
       <GreenBgTitle title={title} className="text-3xl sm:text-4xl" />
       {helper ? <span className="pb-1 text-xs text-black/40">{helper}</span> : null}
-    </div>
-  );
-};
-
-const Meta = ({ item }) => {
-  return (
-    <div className="mt-3 flex flex-wrap gap-3 text-[0.68rem] text-black/35">
-      {item.created_at ? (
-        <span>{new Date(item.created_at).toLocaleDateString()}</span>
-      ) : null}
-      {item.author_name ? <span>Зохиогч: {item.author_name}</span> : null}
-      <span>2 мин унших</span>
     </div>
   );
 };

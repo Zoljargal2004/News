@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useEditNews } from "@/hooks/provider-news-editor";
 import { useCategories, useNews } from "@/hooks/use-news";
-import { politicalParties } from "@/data/political-parties";
+import { defaultPartyScores, politicalParties } from "@/data/political-parties";
 import {
   Select,
   SelectContent,
@@ -25,6 +25,33 @@ const STATUS_OPTIONS = [
   { value: "draft", label: "Ноорог" },
 ];
 
+const SOURCE_GROUPS = [
+  {
+    id: "right",
+    title: "Right leaning sources",
+    shortLabel: "Right",
+    partyId: "democratic_party",
+    color: "#2563eb",
+    sources: ["Right1", "Right2", "Right3", "RightN"],
+  },
+  {
+    id: "neutral",
+    title: "Neutral sources",
+    shortLabel: "Neutral",
+    partyId: "neutral",
+    color: "#9ca3af",
+    sources: ["Neutral1", "Neutral2", "Neutral3", "NeutralN"],
+  },
+  {
+    id: "left",
+    title: "Left leaning sources",
+    shortLabel: "Left",
+    partyId: "peoples_party",
+    color: "#dc2626",
+    sources: ["Left1", "Left2", "Left3", "LeftN"],
+  },
+];
+
 const getDominantParty = (partyScores) => {
   return politicalParties.reduce((dominantParty, party) => {
     const dominantScore = Number(partyScores?.[dominantParty.id] || 0);
@@ -32,6 +59,80 @@ const getDominantParty = (partyScores) => {
 
     return partyScore > dominantScore ? party : dominantParty;
   }, politicalParties[0]);
+};
+
+const getSelectedParties = (partyScores) => {
+  return politicalParties.filter(
+    (party) => Number(partyScores?.[party.id] || 0) > 0,
+  );
+};
+
+const getPoliticalPartyLabel = (partyScores) => {
+  const selectedParties = getSelectedParties(partyScores);
+
+  return selectedParties.length
+    ? selectedParties.map((party) => party.label).join(", ")
+    : getDominantParty(partyScores).label;
+};
+
+const getSourceCounts = (selectedSourceIds) => {
+  return SOURCE_GROUPS.map((group) => ({
+    ...group,
+    count: group.sources.filter((source) => selectedSourceIds.includes(source))
+      .length,
+  }));
+};
+
+const getPartyScoresFromSources = (selectedSourceIds) => {
+  const sourceCounts = getSourceCounts(selectedSourceIds);
+  const totalSources = sourceCounts.reduce((total, group) => total + group.count, 0);
+
+  if (!totalSources) {
+    return defaultPartyScores;
+  }
+
+  const rawScores = sourceCounts.map((group) => {
+    const rawScore = (group.count / totalSources) * 100;
+
+    return {
+      ...group,
+      score: Math.floor(rawScore),
+      remainder: rawScore - Math.floor(rawScore),
+    };
+  });
+  let remainingScore =
+    100 - rawScores.reduce((total, group) => total + group.score, 0);
+
+  rawScores
+    .sort((first, second) => second.remainder - first.remainder)
+    .forEach((group) => {
+      if (remainingScore > 0) {
+        group.score += 1;
+        remainingScore -= 1;
+      }
+    });
+
+  return {
+    democratic_party:
+      rawScores.find((group) => group.partyId === "democratic_party")?.score || 0,
+    neutral: rawScores.find((group) => group.partyId === "neutral")?.score || 0,
+    peoples_party:
+      rawScores.find((group) => group.partyId === "peoples_party")?.score || 0,
+  };
+};
+
+const getSourceIndicatorLabel = (selectedSourceIds) => {
+  const sourceCounts = getSourceCounts(selectedSourceIds);
+  const highestCount = Math.max(...sourceCounts.map((group) => group.count));
+
+  if (!highestCount) {
+    return "Neutral";
+  }
+
+  return sourceCounts
+    .filter((group) => group.count === highestCount)
+    .map((group) => group.shortLabel)
+    .join(", ");
 };
 
 export const PanelSidebar = () => {
@@ -76,7 +177,6 @@ export const PanelSidebar = () => {
   };
 
   const handleSubmit = async (publish = true) => {
-    const dominantParty = getDominantParty(partyScores);
     const res = await uploadNews({
       news,
       status: publish,
@@ -84,7 +184,8 @@ export const PanelSidebar = () => {
       recommended,
       title: title.trim(),
       thumbnailImage,
-      politicalParty: politicalParty.trim() || dominantParty.label,
+      politicalParty:
+        politicalParty.trim() || getPoliticalPartyLabel(partyScores),
       partyScores,
       sources,
     });
@@ -192,20 +293,26 @@ export const PanelSidebar = () => {
 };
 
 export const CoverageDetails = () => {
-  const { partyScores, setPartyScores } = useEditNews();
+  const {
+    partyScores,
+    politicalSources,
+    setPartyScores,
+    setPoliticalSources,
+  } = useEditNews();
+  const sourceCounts = getSourceCounts(politicalSources);
   const totalScore = politicalParties.reduce(
     (total, party) => total + Number(partyScores?.[party.id] || 0),
     0,
   );
-  const dominantParty = getDominantParty(partyScores);
+  const sourceIndicator = getSourceIndicatorLabel(politicalSources);
 
-  const updatePartyScore = (partyId, value) => {
-    const score = Math.min(100, Math.max(0, Number(value) || 0));
+  const toggleSourceSelection = (source, checked) => {
+    const nextSources = checked
+      ? [...new Set([...politicalSources, source])]
+      : politicalSources.filter((item) => item !== source);
 
-    setPartyScores((current) => ({
-      ...current,
-      [partyId]: score,
-    }));
+    setPoliticalSources(nextSources);
+    setPartyScores(getPartyScoresFromSources(nextSources));
   };
 
   return (
@@ -217,8 +324,12 @@ export const CoverageDetails = () => {
           <span>{totalScore}</span>
         </div>
         <div className="flex items-center justify-between gap-4">
-          <span>Гол хамаарал:</span>
-          <span>{dominantParty.shortLabel}</span>
+          <span>Сонгосон эх сурвалж:</span>
+          <span>{politicalSources.length}</span>
+        </div>
+        <div className="flex items-center justify-between gap-4">
+          <span>Индикатор:</span>
+          <span>{sourceIndicator}</span>
         </div>
       </div>
 
@@ -243,28 +354,42 @@ export const CoverageDetails = () => {
         </div>
 
         <div className="mt-5 space-y-4">
-          {politicalParties.map((party) => (
-            <label key={party.id} className="block space-y-2 text-xs">
-              <div className="flex items-center justify-between gap-3">
-                <span className="font-medium">{party.label}</span>
-                <span>{partyScores?.[party.id] || 0}%</span>
+          {sourceCounts.map((group) => (
+            <div key={group.id} className="space-y-2">
+              <div className="flex items-center justify-between gap-3 text-xs font-semibold">
+                <span className="flex items-center gap-2">
+                  <span
+                    className="size-2 rounded-full"
+                    style={{ backgroundColor: group.color }}
+                  />
+                  {group.title}
+                </span>
+                <span>{group.count}</span>
               </div>
-              <input
-                type="range"
-                min="0"
-                max="100"
-                value={partyScores?.[party.id] || 0}
-                onChange={(event) =>
-                  updatePartyScore(party.id, event.target.value)
-                }
-                className="w-full accent-black"
-              />
-            </label>
+
+              <div className="grid grid-cols-2 gap-2">
+                {group.sources.map((source) => (
+                  <label
+                    key={source}
+                    className="flex items-center justify-between gap-2 rounded-xl border border-black/20 bg-white/35 px-3 py-2 text-xs"
+                  >
+                    <span>{source}</span>
+                    <Checkbox
+                      checked={politicalSources.includes(source)}
+                      onCheckedChange={(checked) =>
+                        toggleSourceSelection(source, Boolean(checked))
+                      }
+                    />
+                  </label>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
 
         <p className="mt-3 border-b border-black/60 pb-2 text-center text-xs text-black/45">
-          Нийтлэл аль намтай илүү холбоотойг оноогоор тохируулна.
+          Эх сурвалжуудын хандлагаар нийтлэлийн улс төрийн индикатор автоматаар
+          тооцогдоно.
         </p>
       </div>
 

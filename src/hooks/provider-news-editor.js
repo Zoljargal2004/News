@@ -15,6 +15,7 @@ export function NewsProvider({ children }) {
   const [thumbnailImage, setThumbnailImage] = useState(null);
   const [politicalParty, setPoliticalParty] = useState("");
   const [partyScores, setPartyScores] = useState(defaultPartyScores);
+  const [politicalSources, setPoliticalSources] = useState([]);
 
   const resetEditor = () => {
     setNews([]);
@@ -26,6 +27,7 @@ export function NewsProvider({ children }) {
     setThumbnailImage(null);
     setPoliticalParty("");
     setPartyScores(defaultPartyScores);
+    setPoliticalSources([]);
   };
 
   return (
@@ -40,6 +42,7 @@ export function NewsProvider({ children }) {
         thumbnailImage,
         politicalParty,
         partyScores,
+        politicalSources,
         setNews,
         setThumbnail,
         setCategory: setCategories,
@@ -50,6 +53,7 @@ export function NewsProvider({ children }) {
         setThumbnailImage,
         setPoliticalParty,
         setPartyScores,
+        setPoliticalSources,
         resetEditor,
       }}
     >
