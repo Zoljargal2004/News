@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { BadgeCheck, Bookmark, CirclePlus } from "lucide-react";
 import { GreenBgTitle } from "@/components/general/title";
+import { ProfileMenu } from "@/components/user/profile-menu";
 import {
   VIEWED_NEWS_STORAGE_KEY,
   VIEWED_NEWS_UPDATED_EVENT,
@@ -151,24 +152,6 @@ export default function User() {
   );
 }
 
-const ProfileMenu = ({ items }) => {
-  return (
-    <aside className="rounded-2xl bg-[#d9d9d9] px-5 py-3 text-center text-xs text-black/75 lg:sticky lg:top-28">
-      {items.map((item, index) => (
-        <button
-          key={item}
-          type="button"
-          className={`block w-full py-4 transition hover:text-black ${
-            index === 0 ? "font-semibold text-black" : ""
-          } ${index !== items.length - 1 ? "border-b border-black/30" : ""}`}
-        >
-          {item}
-        </button>
-      ))}
-    </aside>
-  );
-};
-
 const ProfileHeader = ({ user }) => {
   return (
     <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
@@ -189,12 +172,11 @@ const ProfileHeader = ({ user }) => {
             ) : null}
           </div>
           <p className="mt-2 text-sm text-black/55">{user.email}</p>
-          <p className="text-sm text-black/55">{user.phone}</p>
         </div>
       </div>
 
       <div className="rounded-2xl bg-white px-4 py-3 text-sm font-semibold shadow-sm">
-        Зохиогчийн горим: {user.authorMode ? "асаалттай" : "унтраалттай"}
+        Нийтлэгчийн горим: {user.authorMode ? "асаалттай" : "унтраалттай"}
       </div>
     </div>
   );

@@ -37,6 +37,92 @@ export async function GET() {
   }
 }
 
+export async function PATCH(request: NextRequest) {
+  try {
+    const currentUser = await getCurrentUser();
+
+    if (!currentUser) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized" },
+        { status: 401 },
+      );
+    }
+
+    const { name, email, removeAdminPrivileges } = await request.json();
+    const updates: Record<string, string> = {};
+
+    if (name !== undefined) {
+      const safeName = String(name || "").trim();
+
+      if (!safeName) {
+        return NextResponse.json(
+          { success: false, error: "Name is required" },
+          { status: 400 },
+        );
+      }
+
+      updates.name = safeName;
+    }
+
+    if (email !== undefined) {
+      const safeEmail = normalizeEmail(email);
+
+      if (!safeEmail) {
+        return NextResponse.json(
+          { success: false, error: "Email is required" },
+          { status: 400 },
+        );
+      }
+
+      updates.email = safeEmail;
+    }
+
+    if (removeAdminPrivileges === true && currentUser.role === "admin") {
+      updates.role = "reader";
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return NextResponse.json({ success: true, data: currentUser });
+    }
+
+    await connectDB();
+
+    if (updates.email && updates.email !== currentUser.email) {
+      const existingUser = await User.exists({
+        email: updates.email,
+        _id: { $ne: currentUser.id },
+      });
+
+      if (existingUser) {
+        return NextResponse.json(
+          { success: false, error: "An account with this email already exists" },
+          { status: 409 },
+        );
+      }
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      currentUser.id,
+      { $set: updates },
+      { new: true, runValidators: true },
+    ).lean();
+
+    return NextResponse.json({
+      success: true,
+      data: sanitizeUser(updatedUser),
+    });
+  } catch (e) {
+    console.error(e);
+    return NextResponse.json(
+      {
+        success: false,
+        error: e instanceof Error ? e.message : "Failed to update user",
+      },
+      { status: 500 },
+    );
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { email, name, password } = await request.json();

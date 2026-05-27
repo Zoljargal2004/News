@@ -1,19 +1,15 @@
 export const profileUser = {
   name: "Natalia.G",
   email: "natalia.g@example.com",
-  phone: "9999-0000",
   avatar: "https://i.pravatar.cc/160?img=47",
   authorMode: false,
 };
 
 export const profileMenuItems = [
-  "Профайл",
-  "Сонголтууд",
-  "Мэдээлэл ба нууцлал",
-  "Үйлчилгээний нөхцөл",
-  "Захиалга",
-  "Тохиргоо",
-  "Гарах",
+  { label: "Профайл", href: "/user" },
+  { label: "Үйлчилгээний нөхцөл", href: "/user/terms" },
+  { label: "Тохиргоо", href: "/user/settings" },
+  { label: "Гарах", action: "logout" },
 ];
 
 export const savedNews = [
